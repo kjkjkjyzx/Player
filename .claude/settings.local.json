@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/**)",
+      "Read(//tmp/docx_unpacked/**)",
+      "Bash(python3 -c ':*)",
+      "Bash(cmd /c \"where python3 2>nul || where python 2>nul\")",
+      "Bash(cmd /c \"python -c \\\\\"import xml.etree.ElementTree as ET; tree = ET.parse\\('C:\\\\\\\\\\\\\\\\tmp\\\\\\\\\\\\\\\\docx_unpacked\\\\\\\\\\\\\\\\word\\\\\\\\\\\\\\\\document.xml'\\); root = tree.getroot\\(\\); texts = []; [texts.append\\(''.join\\(t.text for t in para.iter\\('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t'\\) if t.text\\)\\) for para in root.iter\\('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p'\\)]; [print\\(t\\) for t in texts if t]\\\\\"\")",
+      "Bash(cmd /c \"dir C:\\\\tmp\\\\docx_unpacked\\\\word\\\\\" 2>&1)",
+      "Bash(xargs ls:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch"
+    ]
+  }
+}
