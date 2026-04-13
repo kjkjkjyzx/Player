@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -71,7 +72,7 @@ fun GestureOverlay(
         hintText = text
         hideHintJob?.cancel()
         hideHintJob = scope.launch {
-            delay(1200)
+            delay(1500)
             hintText = null
         }
     }
@@ -156,16 +157,16 @@ fun GestureOverlay(
         ) {
             hintText?.let { text ->
                 LiquidGlassContainer(
-                    modifier = Modifier.padding(horizontal = 40.dp),
+                    modifier = Modifier.width(160.dp),
                     cornerRadius = 12.dp,
                     blurRadius = 15f
                 ) {
                     Text(
                         text = text,
                         color = Color.White,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
                     )
                 }
             }

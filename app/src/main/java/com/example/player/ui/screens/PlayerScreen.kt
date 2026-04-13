@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -254,6 +255,7 @@ fun PlayerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
+                            .navigationBarsPadding()
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
@@ -306,13 +308,13 @@ fun PlayerScreen(
                                 ) {
                                     Text(
                                         text  = formatTime(viewModel.currentPosition),
-                                        color = Color.White.copy(alpha = 0.7f),
-                                        fontSize = 12.sp
+                                        color = Color.White.copy(alpha = 0.85f),
+                                        fontSize = 11.sp
                                     )
                                     Text(
                                         text  = formatTime(viewModel.duration),
-                                        color = Color.White.copy(alpha = 0.4f),
-                                        fontSize = 12.sp
+                                        color = Color.White.copy(alpha = 0.45f),
+                                        fontSize = 11.sp
                                     )
                                 }
 
@@ -330,7 +332,7 @@ fun PlayerScreen(
                                             Icons.Default.SkipPrevious,
                                             contentDescription = "上一个",
                                             tint  = Color.White.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     }
                                     // 快退 10s
@@ -339,13 +341,13 @@ fun PlayerScreen(
                                             Icons.Default.Replay10,
                                             contentDescription = "快退10秒",
                                             tint  = Color.White,
-                                            modifier = Modifier.size(28.dp)
+                                            modifier = Modifier.size(26.dp)
                                         )
                                     }
                                     // 播放/暂停大按钮
                                     Box(
                                         modifier = Modifier
-                                            .size(56.dp)
+                                            .size(52.dp)
                                             .clip(CircleShape)
                                             .background(Color.White.copy(alpha = 0.15f))
                                             .border(0.5.dp, Color.White.copy(alpha = 0.25f), CircleShape)
@@ -359,7 +361,7 @@ fun PlayerScreen(
                                                 Icons.Default.PlayArrow,
                                             contentDescription = if (viewModel.isPlaying) "暂停" else "播放",
                                             tint  = Color.White,
-                                            modifier = Modifier.size(30.dp)
+                                            modifier = Modifier.size(28.dp)
                                         )
                                     }
                                     // 快进 30s
@@ -368,7 +370,7 @@ fun PlayerScreen(
                                             Icons.Default.Forward30,
                                             contentDescription = "快进30秒",
                                             tint  = Color.White,
-                                            modifier = Modifier.size(28.dp)
+                                            modifier = Modifier.size(26.dp)
                                         )
                                     }
                                     // 下一个（暂跳到结尾）
@@ -379,7 +381,7 @@ fun PlayerScreen(
                                             Icons.Default.SkipNext,
                                             contentDescription = "下一个",
                                             tint  = Color.White.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     }
                                 }
@@ -415,22 +417,32 @@ private fun StatusCards(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        StatusCard(modifier = Modifier.weight(1f), label = "音量",  value = "${volume}%")
-        StatusCard(modifier = Modifier.weight(1f), label = "亮度",  value = "${brightness}%")
-        StatusCard(
-            modifier  = Modifier.weight(1f),
-            label     = "速度",
-            value     = speedText,
-            clickable = true,
-            onClick   = onSpeedClick
-        )
-        StatusCard(
-            modifier  = Modifier.weight(1f),
-            label     = "画中画",
-            value     = "进入",
-            clickable = true,
-            onClick   = onPiPClick
-        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StatusCard(modifier = Modifier.fillMaxWidth(), label = "音量",  value = "${volume}%")
+            StatusCard(modifier = Modifier.fillMaxWidth(), label = "亮度",  value = "${brightness}%")
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StatusCard(
+                modifier  = Modifier.fillMaxWidth(),
+                label     = "速度",
+                value     = speedText,
+                clickable = true,
+                onClick   = onSpeedClick
+            )
+            StatusCard(
+                modifier  = Modifier.fillMaxWidth(),
+                label     = "画中画",
+                value     = "进入",
+                clickable = true,
+                onClick   = onPiPClick
+            )
+        }
     }
 }
 
@@ -468,15 +480,4 @@ private fun StatusCard(
             )
         }
     }
-}
-
-// ── 工具函数 ──────────────────────────────────────────────────────────────────
-
-private fun formatTime(ms: Long): String {
-    val totalSeconds = (ms / 1000).coerceAtLeast(0)
-    val hours   = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
-    else "%d:%02d".format(minutes, seconds)
 }
