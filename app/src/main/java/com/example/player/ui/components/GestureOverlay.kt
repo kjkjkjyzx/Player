@@ -38,18 +38,23 @@ import kotlin.math.roundToInt
 private enum class DragDirection { HORIZONTAL, VERTICAL, UNDECIDED }
 
 /**
- * Full-screen transparent overlay for gesture control:
- * - Left 1/3  + vertical   → screen brightness
- * - Middle 1/3 + horizontal → seek (0.5 s per dp)
- * - Right 1/3 + vertical   → media volume
- * - Single tap             → toggle controls
- * - Double tap             → play / pause
+ * 全屏透明手势层：
+ * - 左 1/3 + 垂直  → 屏幕亮度
+ * - 中 1/3 + 水平  → 快进/快退（每 dp 0.5s）
+ * - 右 1/3 + 垂直  → 媒体音量
+ * - 单击           → 切换控制栏
+ * - 双击           → 播放/暂停
+ *
+ * @param onVolumeChanged   音量变化回调（0-100）
+ * @param onBrightnessChanged 亮度变化回调（0-100）
  */
 @Composable
 fun GestureOverlay(
     onToggleControls: () -> Unit,
     onTogglePlayPause: () -> Unit,
     onSeekBy: (Long) -> Unit,
+    onVolumeChanged: (Int) -> Unit = {},
+    onBrightnessChanged: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -76,7 +81,9 @@ fun GestureOverlay(
         val cur = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         val next = (cur - normalizedDelta * max).roundToInt().coerceIn(0, max)
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, next, 0)
-        showHint("音量 ${(next * 100f / max).roundToInt()}%")
+        val percent = if (max > 0) (next * 100f / max).roundToInt() else 0
+        showHint("音量 ${percent}%")
+        onVolumeChanged(percent)
     }
 
     fun adjustBrightness(normalizedDelta: Float) {
@@ -86,7 +93,9 @@ fun GestureOverlay(
         val next = (current - normalizedDelta).coerceIn(0.01f, 1.0f)
         lp.screenBrightness = next
         activity.window.attributes = lp
-        showHint("亮度 ${(next * 100).roundToInt()}%")
+        val percent = (next * 100).roundToInt()
+        showHint("亮度 ${percent}%")
+        onBrightnessChanged(percent)
     }
 
     var dragDir by remember { mutableStateOf(DragDirection.UNDECIDED) }
@@ -111,7 +120,6 @@ fun GestureOverlay(
                         change.consume()
                         val xFrac = change.position.x / size.width.toFloat()
 
-                        // Lock direction on first significant move
                         if (dragDir == DragDirection.UNDECIDED) {
                             dragDir = if (abs(delta.x) > abs(delta.y) * 1.5f) {
                                 DragDirection.HORIZONTAL
@@ -124,18 +132,15 @@ fun GestureOverlay(
 
                         when {
                             xFrac in 0.33f..0.67f && dragDir == DragDirection.HORIZONTAL -> {
-                                // Middle zone → seek
                                 val ms = (delta.x * 500).toLong()
                                 onSeekBy(ms)
                                 val secs = ms / 1000
                                 showHint(if (secs >= 0) "+${secs}s" else "${secs}s")
                             }
                             xFrac > 0.67f && dragDir == DragDirection.VERTICAL -> {
-                                // Right zone → volume
                                 adjustVolume(delta.y / size.height.toFloat())
                             }
                             xFrac < 0.33f && dragDir == DragDirection.VERTICAL -> {
-                                // Left zone → brightness
                                 adjustBrightness(delta.y / size.height.toFloat())
                             }
                         }
@@ -143,7 +148,6 @@ fun GestureOverlay(
                 )
             }
     ) {
-        // Centre gesture hint
         AnimatedVisibility(
             visible = hintText != null,
             enter = fadeIn(),

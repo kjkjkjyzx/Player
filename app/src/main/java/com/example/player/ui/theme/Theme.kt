@@ -1,22 +1,20 @@
 package com.example.player.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val AppColorScheme = lightColorScheme(
+private val AppColorScheme = darkColorScheme(
     primary          = PrimaryBlue,
     onPrimary        = Color.White,
-    secondary        = TextSecondary,
-    onSecondary      = Color.White,
-    background       = BeigeBackground,
+    background       = DarkBackground,
     onBackground     = TextPrimary,
-    surface          = BeigeSurface,
+    surface          = DarkSurface,
     onSurface        = TextPrimary,
-    surfaceVariant   = BeigeDivider,
+    surfaceVariant   = DarkCard,
     onSurfaceVariant = TextSecondary,
-    outline          = BeigeDivider
+    outline          = DarkBorder
 )
 
 @Composable

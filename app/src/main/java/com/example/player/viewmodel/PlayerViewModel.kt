@@ -2,8 +2,11 @@ package com.example.player.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.media.AudioManager
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,10 +19,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = application.getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
+    private val audioManager = application.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     val player: ExoPlayer = ExoPlayer.Builder(application).build()
 
@@ -42,6 +47,24 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     var videoSizeKnown by mutableStateOf(false)
         private set
 
+    // 播放速度（0.5 / 1.0 / 1.25 / 1.5 / 2.0）
+    var playbackSpeed by mutableFloatStateOf(1.0f)
+        private set
+
+    // 音量百分比（0-100），由手势层回调更新
+    var volumePercent by mutableIntStateOf(
+        run {
+            val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val cur = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            if (max > 0) (cur * 100f / max).roundToInt() else 50
+        }
+    )
+        private set
+
+    // 亮度百分比（0-100），由手势层回调更新
+    var brightnessPercent by mutableIntStateOf(50)
+        private set
+
     private var hideControlsJob: Job? = null
     private var initialized = false
     private var positionRestored = false
@@ -51,9 +74,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 isPlaying = playing
-                if (playing) {
-                    scheduleHideControls()
-                } else {
+                if (playing) scheduleHideControls()
+                else {
                     hideControlsJob?.cancel()
                     controlsVisible = true
                 }
@@ -67,7 +89,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     if (!positionRestored) {
                         positionRestored = true
                         val saved = currentUri?.let { prefs.getLong(it.toString(), 0L) } ?: 0L
-                        // 超过 2 秒才恢复，避免从片头播放也跳转
                         if (saved > 2000L) player.seekTo(saved)
                     }
                 }
@@ -99,8 +120,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             ?.substringAfterLast('/')
             ?.substringBeforeLast('.')
             ?: "Video"
-        val mediaItem = MediaItem.fromUri(uri)
-        player.setMediaItem(mediaItem)
+        player.setMediaItem(MediaItem.fromUri(uri))
         player.prepare()
         player.playWhenReady = true
     }
@@ -133,6 +153,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             showControls()
         }
     }
+
+    fun cycleSpeed() {
+        val speeds = listOf(0.5f, 1.0f, 1.25f, 1.5f, 2.0f)
+        val idx = speeds.indexOfFirst { it == playbackSpeed }.coerceAtLeast(0)
+        playbackSpeed = speeds[(idx + 1) % speeds.size]
+        player.setPlaybackSpeed(playbackSpeed)
+    }
+
+    fun updateVolume(percent: Int) { volumePercent = percent }
+    fun updateBrightness(percent: Int) { brightnessPercent = percent }
 
     fun onPause() {
         savePosition()
