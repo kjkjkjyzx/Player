@@ -38,28 +38,34 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import coil.request.ImageRequest
 import com.example.player.model.VideoItem
+import com.example.player.ui.theme.BeigeBackground
+import com.example.player.ui.theme.BeigeSurface
+import com.example.player.ui.theme.PrimaryBlue
+import com.example.player.ui.theme.TextPrimary
+import com.example.player.ui.theme.TextSecondary
 import com.example.player.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
-
-private val PrimaryBlue = Color(0xFF1565C0)
-private val SurfaceDark = Color(0xFF0D1117)
-private val SurfaceCard = Color(0xFF161B22)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +75,7 @@ fun HomeScreen(
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    var videos by remember { mutableStateOf<List<VideoItem>>(emptyList()) }
+    val videos by viewModel.videos.collectAsState()
 
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -84,7 +90,7 @@ fun HomeScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            videos = viewModel.loadVideos()
+            viewModel.loadVideos()
         } else {
             scope.launch {
                 snackbarHostState.showSnackbar("需要存储权限才能浏览本地视频。请通过文件选择器打开视频。")
@@ -103,11 +109,11 @@ fun HomeScreen(
                 title = {
                     Text(
                         text = "液态玻璃播放器",
-                        color = Color.White,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BeigeBackground)
             )
         },
         floatingActionButton = {
@@ -120,7 +126,7 @@ fun HomeScreen(
                 Icon(Icons.Default.Add, contentDescription = "选择视频文件")
             }
         },
-        containerColor = SurfaceDark
+        containerColor = BeigeBackground
     ) { innerPadding ->
         if (videos.isEmpty()) {
             EmptyState(
@@ -171,11 +177,11 @@ private fun EmptyState(modifier: Modifier = Modifier, onPickFile: () -> Unit) {
             )
         }
         Spacer(Modifier.height(24.dp))
-        Text("暂无本地视频", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        Text("暂无本地视频", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(8.dp))
         Text(
             "点击下方按钮选择视频文件",
-            color = Color.White.copy(alpha = 0.5f),
+            color = TextSecondary,
             fontSize = 14.sp
         )
         Spacer(Modifier.height(32.dp))
@@ -193,34 +199,54 @@ private fun EmptyState(modifier: Modifier = Modifier, onPickFile: () -> Unit) {
 
 @Composable
 private fun VideoCard(video: VideoItem, onClick: () -> Unit) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceCard)
+            .background(BeigeSurface)
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(PrimaryBlue.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(video.uri)
+                // 取视频第 1 秒帧作为缩略图（coil-video 内部 key）
+                .setParameter("coil#video_frame_micros", 1_000_000L)
+                .build(),
+            contentDescription = null
         ) {
-            Icon(
-                Icons.Default.PlayArrow,
-                contentDescription = null,
-                tint = PrimaryBlue,
-                modifier = Modifier.size(32.dp)
-            )
+            val state = painter.state
+            if (state is AsyncImagePainter.State.Success) {
+                SubcomposeAsyncImageContent(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PrimaryBlue.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = video.displayName.substringBeforeLast('.'),
-                color = Color.White,
+                color = TextPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -229,7 +255,7 @@ private fun VideoCard(video: VideoItem, onClick: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "${video.durationFormatted} · ${video.sizeFormatted}",
-                color = Color.White.copy(alpha = 0.5f),
+                color = TextSecondary,
                 fontSize = 12.sp
             )
         }

@@ -1,6 +1,7 @@
 package com.example.player.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -10,12 +11,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val prefs = application.getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
 
     val player: ExoPlayer = ExoPlayer.Builder(application).build()
 
@@ -33,9 +37,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         private set
     var isBuffering by mutableStateOf(false)
         private set
+    var isLandscapeVideo by mutableStateOf(false)
+        private set
+    var videoSizeKnown by mutableStateOf(false)
+        private set
 
     private var hideControlsJob: Job? = null
     private var initialized = false
+    private var positionRestored = false
+    private var currentUri: Uri? = null
 
     init {
         player.addListener(object : Player.Listener {
@@ -54,6 +64,19 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (state == Player.STATE_READY) {
                     isReady = true
                     duration = player.duration.coerceAtLeast(0L)
+                    if (!positionRestored) {
+                        positionRestored = true
+                        val saved = currentUri?.let { prefs.getLong(it.toString(), 0L) } ?: 0L
+                        // 超过 2 秒才恢复，避免从片头播放也跳转
+                        if (saved > 2000L) player.seekTo(saved)
+                    }
+                }
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    isLandscapeVideo = videoSize.width >= videoSize.height
+                    videoSizeKnown = true
                 }
             }
         })
@@ -71,6 +94,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun initializePlayer(uri: Uri) {
         if (initialized) return
         initialized = true
+        currentUri = uri
         videoTitle = uri.lastPathSegment
             ?.substringAfterLast('/')
             ?.substringBeforeLast('.')
@@ -110,8 +134,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun onPause() { player.pause() }
+    fun onPause() {
+        savePosition()
+        player.pause()
+    }
+
     fun onResume() { player.play() }
+
+    private fun savePosition() {
+        currentUri?.let { uri ->
+            prefs.edit().putLong(uri.toString(), player.currentPosition).apply()
+        }
+    }
 
     private fun scheduleHideControls() {
         hideControlsJob?.cancel()
@@ -124,6 +158,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     override fun onCleared() {
+        savePosition()
         player.release()
         super.onCleared()
     }

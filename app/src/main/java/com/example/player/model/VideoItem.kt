@@ -1,7 +1,9 @@
 package com.example.player.model
 
 import android.net.Uri
+import androidx.compose.runtime.Immutable
 
+@Immutable
 data class VideoItem(
     val uri: Uri,
     val displayName: String,

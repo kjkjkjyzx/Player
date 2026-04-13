@@ -22,8 +22,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +56,7 @@ fun GestureOverlay(
     val audioManager = remember {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
+    val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
 
     var hintText by remember { mutableStateOf<String?>(null) }
@@ -99,7 +102,10 @@ fun GestureOverlay(
             }
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { dragDir = DragDirection.UNDECIDED },
+                    onDragStart = {
+                        dragDir = DragDirection.UNDECIDED
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    },
                     onDragEnd = { dragDir = DragDirection.UNDECIDED },
                     onDrag = { change, delta ->
                         change.consume()

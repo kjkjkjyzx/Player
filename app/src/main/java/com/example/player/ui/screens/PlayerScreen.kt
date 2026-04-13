@@ -1,7 +1,10 @@
 package com.example.player.ui.screens
 
 import android.app.Activity
+import android.app.PictureInPictureParams
+import android.content.pm.ActivityInfo
 import android.net.Uri
+import android.util.Rational
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -29,10 +33,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +49,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.PlayerView
 import com.example.player.ui.components.GestureOverlay
@@ -55,12 +66,13 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(videoUri) {
         viewModel.initializePlayer(videoUri)
     }
 
-    // Immersive fullscreen
+    // 沉浸式全屏
     DisposableEffect(Unit) {
         val window = (context as Activity).window
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -78,12 +90,49 @@ fun PlayerScreen(
         onDispose { viewModel.onPause() }
     }
 
+    // 根据视频宽高自动旋转屏幕
+    val isLandscape = viewModel.isLandscapeVideo
+    val videoSizeKnown = viewModel.videoSizeKnown
+    LaunchedEffect(videoSizeKnown, isLandscape) {
+        if (!videoSizeKnown) return@LaunchedEffect
+        (context as Activity).requestedOrientation = if (isLandscape)
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        else
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            (context as Activity).requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    // 启用按 Home 键自动进入画中画（API 31+）
+    LaunchedEffect(Unit) {
+        val params = PictureInPictureParams.Builder()
+            .setAutoEnterEnabled(true)
+            .build()
+        (context as Activity).setPictureInPictureParams(params)
+    }
+
+    // 检测画中画模式（进入/退出时隐藏控制栏）
+    var isInPiP by remember { mutableStateOf(false) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_PAUSE) {
+                isInPiP = (context as Activity).isInPictureInPictureMode
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Video surface
+        // 视频画面
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -95,7 +144,7 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Buffering indicator
+        // 缓冲指示器
         if (viewModel.isBuffering) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
@@ -103,71 +152,86 @@ fun PlayerScreen(
             )
         }
 
-        // Gesture overlay (always active)
-        GestureOverlay(
-            onToggleControls = viewModel::toggleControls,
-            onTogglePlayPause = viewModel::togglePlayPause,
-            onSeekBy = viewModel::seekBy,
-            modifier = Modifier.fillMaxSize()
-        )
+        // 画中画模式下隐藏手势层和控制栏
+        if (!isInPiP) {
+            GestureOverlay(
+                onToggleControls = viewModel::toggleControls,
+                onTogglePlayPause = viewModel::togglePlayPause,
+                onSeekBy = viewModel::seekBy,
+                modifier = Modifier.fillMaxSize()
+            )
 
-        // Controls with fade animation
-        AnimatedVisibility(
-            visible = viewModel.controlsVisible,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = viewModel.controlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
 
-                // Top bar
-                LiquidGlassContainer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter)
-                        .padding(12.dp),
-                    cornerRadius = 16.dp
-                ) {
-                    Row(
+                    // 顶栏
+                    LiquidGlassContainer(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .align(Alignment.TopCenter)
+                            .padding(12.dp),
+                        cornerRadius = 16.dp
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "返回",
-                                tint = Color.White
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "返回",
+                                    tint = Color.White
+                                )
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = viewModel.videoTitle,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                modifier = Modifier.weight(1f)
                             )
+                            // 画中画按钮
+                            IconButton(onClick = {
+                                val params = PictureInPictureParams.Builder()
+                                    .setAspectRatio(Rational(16, 9))
+                                    .setAutoEnterEnabled(true)
+                                    .build()
+                                (context as Activity).enterPictureInPictureMode(params)
+                            }) {
+                                Icon(
+                                    Icons.Default.PictureInPicture,
+                                    contentDescription = "画中画",
+                                    tint = Color.White
+                                )
+                            }
                         }
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = viewModel.videoTitle,
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            modifier = Modifier.weight(1f)
+                    }
+
+                    // 底部控制栏
+                    LiquidGlassContainer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(12.dp),
+                        cornerRadius = 16.dp
+                    ) {
+                        BottomControls(
+                            isPlaying = viewModel.isPlaying,
+                            currentPosition = viewModel.currentPosition,
+                            duration = viewModel.duration,
+                            onPlayPause = viewModel::togglePlayPause,
+                            onSeek = viewModel::seekTo
                         )
                     }
-                }
-
-                // Bottom control bar
-                LiquidGlassContainer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(12.dp),
-                    cornerRadius = 16.dp
-                ) {
-                    BottomControls(
-                        isPlaying = viewModel.isPlaying,
-                        currentPosition = viewModel.currentPosition,
-                        duration = viewModel.duration,
-                        onPlayPause = viewModel::togglePlayPause,
-                        onSeek = viewModel::seekTo
-                    )
                 }
             }
         }

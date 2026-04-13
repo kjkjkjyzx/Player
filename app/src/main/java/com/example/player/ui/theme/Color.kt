@@ -2,15 +2,19 @@ package com.example.player.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary brand palette — deep blue
-val Blue80 = Color(0xFF90CAF9)
-val BlueGrey80 = Color(0xFFB0BEC5)
-val Cyan80 = Color(0xFF80DEEA)
+// Primary interactive colour
+val PrimaryBlue    = Color(0xFF1565C0)
+val PrimaryBlueLight = Color(0xFF5E92F3)
 
-val Blue40 = Color(0xFF1565C0)
-val BlueGrey40 = Color(0xFF546E7A)
-val Cyan40 = Color(0xFF00838F)
+// Beige / warm-cream surface palette (eye-friendly)
+val BeigeBackground = Color(0xFFF5EDD6)   // main background
+val BeigeSurface    = Color(0xFFEDE4C8)   // card / surface
+val BeigeDivider    = Color(0xFFD9CEAF)   // subtle divider
 
-// Surface colours for the dark player UI
-val SurfaceDark = Color(0xFF0D1117)
-val SurfaceCard = Color(0xFF161B22)
+// Text on beige
+val TextPrimary   = Color(0xFF2C1E0A)     // dark brown
+val TextSecondary = Color(0xFF7A6A50)     // medium brown
+
+// Player overlay tints (controls drawn over video — stay dark)
+val PlayerOverlayDark = Color(0xFF0D1117)
+val PlayerCard        = Color(0xFF161B22)
