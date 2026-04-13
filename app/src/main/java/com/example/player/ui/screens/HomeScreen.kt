@@ -78,6 +78,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.example.player.model.SortOption
 import com.example.player.model.VideoItem
+import com.example.player.ui.components.LiquidGlassContainer
 import com.example.player.ui.theme.DarkBackground
 import com.example.player.ui.theme.DarkBorder
 import com.example.player.ui.theme.DarkCard
@@ -176,19 +177,18 @@ fun HomeScreen(
                         letterSpacing = (-0.3).sp
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0x14FFFFFF))
-                        .border(0.5.dp, Color(0x1FFFFFFF), RoundedCornerShape(20.dp))
-                        .clickable { showFilterSheet = true }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                LiquidGlassContainer(
+                    cornerRadius = 20.dp,
+                    isLight = true,
+                    blurRadius = 14f,
+                    onClick = { showFilterSheet = true }
                 ) {
                     Text(
                         text = if (viewModel.currentSort == SortOption.DATE_DESC) "筛选"
                                else viewModel.currentSort.label,
                         color = TextPrimary,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -204,52 +204,58 @@ fun HomeScreen(
             ) {
                 tabs.forEach { tab ->
                     val selected = tab == selectedTab
-                    // 液态玻璃 Chip：选中为深色磨砂玻璃，未选中为透明磨砂玻璃
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(
-                                if (selected)
+                    if (selected) {
+                        // 选中：深色暖磨砂玻璃
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(
                                     Brush.linearGradient(
                                         colors = listOf(Color(0xFF3D3830), Color(0xFF252017)),
                                         start = Offset(0f, 0f),
                                         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                                     )
-                                else
-                                    Brush.linearGradient(
-                                        colors = listOf(Color.White.copy(alpha = 0.72f), Color.White.copy(alpha = 0.50f)),
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.35f),
+                                            Color.White.copy(alpha = 0.10f),
+                                            Color.White.copy(alpha = 0.04f),
+                                            Color.White.copy(alpha = 0.20f)
+                                        ),
                                         start = Offset(0f, 0f),
                                         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                    )
-                            )
-                            .border(
-                                width = 1.dp,
-                                brush = Brush.linearGradient(
-                                    colors = if (selected) listOf(
-                                        Color.White.copy(alpha = 0.35f),
-                                        Color.White.copy(alpha = 0.12f),
-                                        Color.White.copy(alpha = 0.04f),
-                                        Color.White.copy(alpha = 0.20f)
-                                    ) else listOf(
-                                        Color.White.copy(alpha = 0.95f),
-                                        Color.White.copy(alpha = 0.40f),
-                                        Color.White.copy(alpha = 0.08f),
-                                        Color.White.copy(alpha = 0.55f)
                                     ),
-                                    start = Offset(0f, 0f),
-                                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                ),
-                                shape = CircleShape
+                                    shape = CircleShape
+                                )
+                                .clickable { selectedTab = tab }
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = tab,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
                             )
-                            .clickable { selectedTab = tab }
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = tab,
-                            color = if (selected) Color.White else TextSecondary,
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
-                        )
+                        }
+                    } else {
+                        // 未选中：真实液态玻璃（含 RenderEffect 模糊）
+                        LiquidGlassContainer(
+                            cornerRadius = 50.dp,
+                            isLight = true,
+                            blurRadius = 12f,
+                            onClick = { selectedTab = tab }
+                        ) {
+                            Text(
+                                text = tab,
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -373,35 +379,31 @@ private fun EmptyState(
         )
         if (selectedTab == "全部") {
             Spacer(Modifier.height(28.dp))
-            // 液态玻璃蓝色按钮
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFF2980E8), Color(0xFF1255A8)),
-                            start = Offset(0f, 0f),
-                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                        )
-                    )
-                    .border(
-                        width = 1.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.60f),
-                                Color.White.copy(alpha = 0.20f),
-                                Color.White.copy(alpha = 0.04f),
-                                Color.White.copy(alpha = 0.35f)
-                            ),
-                            start = Offset(0f, 0f),
-                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                        ),
-                        shape = RoundedCornerShape(50)
-                    )
-                    .clickable(onClick = onPickFile)
-                    .padding(horizontal = 28.dp, vertical = 13.dp)
+            // 液态玻璃蓝色按钮（LiquidGlassContainer + 蓝色叠层）
+            LiquidGlassContainer(
+                cornerRadius = 50.dp,
+                isLight = true,
+                blurRadius = 16f,
+                onClick = onPickFile
             ) {
-                Text("选择视频", color = Color.White, fontWeight = FontWeight.SemiBold)
+                // 蓝色主题叠加层
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(PrimaryBlue.copy(alpha = 0.22f), PrimaryBlue.copy(alpha = 0.12f)),
+                                start = Offset(0f, 0f),
+                                end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                            )
+                        )
+                )
+                Text(
+                    "选择视频",
+                    color = PrimaryBlue,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 13.dp)
+                )
             }
         }
     }

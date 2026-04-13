@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -251,138 +250,188 @@ fun PlayerScreen(
                     }
 
                     // ── 底部区域 ──────────────────────────────────────────────
-                    Column(
+                    // ── 底部控制栏（单层玻璃容器，三列布局）────────────────────
+                    val speedText = when (viewModel.playbackSpeed) {
+                        0.5f  -> "0.5×"
+                        1.0f  -> "1.0×"
+                        1.25f -> "1.25×"
+                        1.5f  -> "1.5×"
+                        2.0f  -> "2.0×"
+                        else  -> "${viewModel.playbackSpeed}×"
+                    }
+                    val enterPiP = {
+                        (context as Activity).enterPictureInPictureMode(
+                            PictureInPictureParams.Builder()
+                                .setAspectRatio(Rational(16, 9))
+                                .build()
+                        )
+                    }
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                             .navigationBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        // 四个状态卡片
-                        StatusCards(
-                            volume     = viewModel.volumePercent,
-                            brightness = viewModel.brightnessPercent,
-                            speed      = viewModel.playbackSpeed,
-                            onSpeedClick = viewModel::cycleSpeed,
-                            onPiPClick   = {
-                                (context as Activity).enterPictureInPictureMode(
-                                    PictureInPictureParams.Builder()
-                                        .setAspectRatio(Rational(16, 9))
-                                        .build()
-                                )
-                            }
-                        )
-
-                        // 进度条 + 时间
                         LiquidGlassContainer(
                             modifier     = Modifier.fillMaxWidth(),
                             cornerRadius = 20.dp
                         ) {
-                            Column(
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // 进度条（加粗 3dp）
-                                Slider(
-                                    value = if (viewModel.duration > 0)
-                                        viewModel.currentPosition.toFloat() / viewModel.duration
-                                    else 0f,
-                                    onValueChange = { frac ->
-                                        if (viewModel.duration > 0)
-                                            viewModel.seekTo((frac * viewModel.duration).toLong())
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = SliderDefaults.colors(
-                                        thumbColor          = AccentWhite,
-                                        activeTrackColor    = AccentWhite,
-                                        inactiveTrackColor  = Color.White.copy(alpha = 0.25f)
-                                    )
-                                )
-
-                                // 时间
+                                // ── 左：播放控制按钮 ──────────────────────────────
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text  = formatTime(viewModel.currentPosition),
-                                        color = Color.White.copy(alpha = 0.85f),
-                                        fontSize = 11.sp
-                                    )
-                                    Text(
-                                        text  = formatTime(viewModel.duration),
-                                        color = Color.White.copy(alpha = 0.45f),
-                                        fontSize = 11.sp
-                                    )
-                                }
-
-                                Spacer(Modifier.height(6.dp))
-
-                                // 五键播放控制行
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment     = Alignment.CenterVertically
                                 ) {
                                     // 上一个
-                                    IconButton(onClick = { viewModel.seekTo(0L) }) {
-                                        Icon(
-                                            Icons.Default.SkipPrevious,
-                                            contentDescription = "上一个",
-                                            tint  = Color.White.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                    // 快退 10s
-                                    IconButton(onClick = { viewModel.seekBy(-10_000L) }) {
-                                        Icon(
-                                            Icons.Default.Replay10,
-                                            contentDescription = "快退10秒",
-                                            tint  = Color.White,
-                                            modifier = Modifier.size(26.dp)
-                                        )
-                                    }
-                                    // 播放/暂停大按钮
                                     Box(
                                         modifier = Modifier
-                                            .size(52.dp)
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .clickable { viewModel.seekTo(0L) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.SkipPrevious, "上一个",
+                                            tint = Color.White.copy(alpha = 0.55f),
+                                            modifier = Modifier.size(18.dp))
+                                    }
+                                    // 快退 10s
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .clickable { viewModel.seekBy(-10_000L) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Replay10, "快退10秒",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp))
+                                    }
+                                    // 播放/暂停
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
                                             .clip(CircleShape)
                                             .background(Color.White.copy(alpha = 0.15f))
-                                            .border(0.5.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+                                            .border(0.5.dp, Color.White.copy(alpha = 0.30f), CircleShape)
                                             .clickable { viewModel.togglePlayPause() },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = if (viewModel.isPlaying)
-                                                Icons.Default.Pause
-                                            else
-                                                Icons.Default.PlayArrow,
+                                            imageVector = if (viewModel.isPlaying) Icons.Default.Pause
+                                                          else Icons.Default.PlayArrow,
                                             contentDescription = if (viewModel.isPlaying) "暂停" else "播放",
-                                            tint  = Color.White,
-                                            modifier = Modifier.size(28.dp)
+                                            tint = Color.White,
+                                            modifier = Modifier.size(22.dp)
                                         )
                                     }
                                     // 快进 30s
-                                    IconButton(onClick = { viewModel.seekBy(30_000L) }) {
-                                        Icon(
-                                            Icons.Default.Forward30,
-                                            contentDescription = "快进30秒",
-                                            tint  = Color.White,
-                                            modifier = Modifier.size(26.dp)
-                                        )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .clickable { viewModel.seekBy(30_000L) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Forward30, "快进30秒",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp))
                                     }
-                                    // 下一个（暂跳到结尾）
-                                    IconButton(onClick = {
-                                        if (viewModel.duration > 0) viewModel.seekTo(viewModel.duration - 500)
-                                    }) {
-                                        Icon(
-                                            Icons.Default.SkipNext,
-                                            contentDescription = "下一个",
-                                            tint  = Color.White.copy(alpha = 0.6f),
-                                            modifier = Modifier.size(24.dp)
+                                    // 下一个
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                if (viewModel.duration > 0)
+                                                    viewModel.seekTo(viewModel.duration - 500)
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.SkipNext, "下一个",
+                                            tint = Color.White.copy(alpha = 0.55f),
+                                            modifier = Modifier.size(18.dp))
+                                    }
+                                }
+
+                                Spacer(Modifier.width(10.dp))
+
+                                // ── 中：进度条 + 时间 ─────────────────────────────
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Slider(
+                                        value = if (viewModel.duration > 0)
+                                            viewModel.currentPosition.toFloat() / viewModel.duration
+                                        else 0f,
+                                        onValueChange = { frac ->
+                                            if (viewModel.duration > 0)
+                                                viewModel.seekTo((frac * viewModel.duration).toLong())
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = SliderDefaults.colors(
+                                            thumbColor         = AccentWhite,
+                                            activeTrackColor   = AccentWhite,
+                                            inactiveTrackColor = Color.White.copy(alpha = 0.25f)
                                         )
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(formatTime(viewModel.currentPosition),
+                                            color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp)
+                                        Text(formatTime(viewModel.duration),
+                                            color = Color.White.copy(alpha = 0.45f), fontSize = 10.sp)
+                                    }
+                                }
+
+                                Spacer(Modifier.width(10.dp))
+
+                                // ── 右：速度 + 画中画 ─────────────────────────────
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    // 速度切换
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(CardBg)
+                                            .border(0.5.dp, CardBorder, RoundedCornerShape(8.dp))
+                                            .clickable { viewModel.cycleSpeed() }
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(speedText,
+                                                color = Color.White,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold)
+                                            Text("速度",
+                                                color = Color.White.copy(alpha = 0.45f),
+                                                fontSize = 9.sp)
+                                        }
+                                    }
+                                    // 画中画
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(CardBg)
+                                            .border(0.5.dp, CardBorder, CircleShape)
+                                            .clickable { enterPiP() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.PictureInPicture, "画中画",
+                                            tint = Color.White.copy(alpha = 0.85f),
+                                            modifier = Modifier.size(14.dp))
                                     }
                                 }
                             }
@@ -394,90 +443,3 @@ fun PlayerScreen(
     }
 }
 
-// ── 四个状态卡片 ──────────────────────────────────────────────────────────────
-
-@Composable
-private fun StatusCards(
-    volume: Int,
-    brightness: Int,
-    speed: Float,
-    onSpeedClick: () -> Unit,
-    onPiPClick: () -> Unit
-) {
-    val speedText = when (speed) {
-        0.5f  -> "0.5×"
-        1.0f  -> "1.0×"
-        1.25f -> "1.25×"
-        1.5f  -> "1.5×"
-        2.0f  -> "2.0×"
-        else  -> "${speed}×"
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatusCard(modifier = Modifier.fillMaxWidth(), label = "音量",  value = "${volume}%")
-            StatusCard(modifier = Modifier.fillMaxWidth(), label = "亮度",  value = "${brightness}%")
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatusCard(
-                modifier  = Modifier.fillMaxWidth(),
-                label     = "速度",
-                value     = speedText,
-                clickable = true,
-                onClick   = onSpeedClick
-            )
-            StatusCard(
-                modifier  = Modifier.fillMaxWidth(),
-                label     = "画中画",
-                value     = "进入",
-                clickable = true,
-                onClick   = onPiPClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatusCard(
-    modifier: Modifier = Modifier,
-    label: String,
-    value: String,
-    clickable: Boolean = false,
-    onClick: () -> Unit = {}
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(CardBg)
-            .border(0.5.dp, CardBorder, RoundedCornerShape(12.dp))
-            .then(if (clickable) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text      = value,
-                color     = Color.White,
-                fontSize  = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign  = TextAlign.Center
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text     = label,
-                color    = Color.White.copy(alpha = 0.45f),
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
