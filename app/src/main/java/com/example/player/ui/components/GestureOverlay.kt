@@ -46,6 +46,7 @@ private enum class DragDirection { HORIZONTAL, VERTICAL, UNDECIDED }
  * - 单击           → 切换控制栏
  * - 双击           → 播放/暂停
  *
+ * @param enabled         false = 锁定模式，仅保留单击切换控制栏，拖拽/双击禁用
  * @param onVolumeChanged   音量变化回调（0-100）
  * @param onBrightnessChanged 亮度变化回调（0-100）
  */
@@ -56,6 +57,7 @@ fun GestureOverlay(
     onSeekBy: (Long) -> Unit,
     onVolumeChanged: (Int) -> Unit = {},
     onBrightnessChanged: (Int) -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -101,72 +103,77 @@ fun GestureOverlay(
 
     var dragDir by remember { mutableStateOf(DragDirection.UNDECIDED) }
 
+    // 拖拽修饰符（锁定时禁用）
+    val dragModifier = if (enabled) {
+        Modifier.pointerInput(Unit) {
+            detectDragGestures(
+                onDragStart = {
+                    dragDir = DragDirection.UNDECIDED
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                },
+                onDragEnd = { dragDir = DragDirection.UNDECIDED },
+                onDrag = { change, delta ->
+                    change.consume()
+                    val xFrac = change.position.x / size.width.toFloat()
+
+                    if (dragDir == DragDirection.UNDECIDED) {
+                        dragDir = if (abs(delta.x) > abs(delta.y) * 1.5f) {
+                            DragDirection.HORIZONTAL
+                        } else if (abs(delta.y) > abs(delta.x) * 1.5f) {
+                            DragDirection.VERTICAL
+                        } else {
+                            DragDirection.UNDECIDED
+                        }
+                    }
+
+                    when {
+                        xFrac in 0.33f..0.67f && dragDir == DragDirection.HORIZONTAL -> {
+                            val ms = (delta.x * 500).toLong()
+                            onSeekBy(ms)
+                            val secs = ms / 1000
+                            showHint(if (secs >= 0) "+${secs}s" else "${secs}s")
+                        }
+                        xFrac > 0.67f && dragDir == DragDirection.VERTICAL -> {
+                            adjustVolume(delta.y / size.height.toFloat())
+                        }
+                        xFrac < 0.33f && dragDir == DragDirection.VERTICAL -> {
+                            adjustBrightness(delta.y / size.height.toFloat())
+                        }
+                    }
+                }
+            )
+        }
+    } else Modifier
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
+            .pointerInput(enabled) {
                 detectTapGestures(
-                    onTap = { onToggleControls() },
-                    onDoubleTap = { onTogglePlayPause() }
+                    onTap        = { onToggleControls() },
+                    onDoubleTap  = if (enabled) { { onTogglePlayPause() } } else null
                 )
             }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = {
-                        dragDir = DragDirection.UNDECIDED
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    },
-                    onDragEnd = { dragDir = DragDirection.UNDECIDED },
-                    onDrag = { change, delta ->
-                        change.consume()
-                        val xFrac = change.position.x / size.width.toFloat()
-
-                        if (dragDir == DragDirection.UNDECIDED) {
-                            dragDir = if (abs(delta.x) > abs(delta.y) * 1.5f) {
-                                DragDirection.HORIZONTAL
-                            } else if (abs(delta.y) > abs(delta.x) * 1.5f) {
-                                DragDirection.VERTICAL
-                            } else {
-                                DragDirection.UNDECIDED
-                            }
-                        }
-
-                        when {
-                            xFrac in 0.33f..0.67f && dragDir == DragDirection.HORIZONTAL -> {
-                                val ms = (delta.x * 500).toLong()
-                                onSeekBy(ms)
-                                val secs = ms / 1000
-                                showHint(if (secs >= 0) "+${secs}s" else "${secs}s")
-                            }
-                            xFrac > 0.67f && dragDir == DragDirection.VERTICAL -> {
-                                adjustVolume(delta.y / size.height.toFloat())
-                            }
-                            xFrac < 0.33f && dragDir == DragDirection.VERTICAL -> {
-                                adjustBrightness(delta.y / size.height.toFloat())
-                            }
-                        }
-                    }
-                )
-            }
+            .then(dragModifier)
     ) {
         AnimatedVisibility(
-            visible = hintText != null,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            visible  = hintText != null,
+            enter    = fadeIn(),
+            exit     = fadeOut(),
             modifier = Modifier.align(Alignment.Center)
         ) {
             hintText?.let { text ->
                 LiquidGlassContainer(
-                    modifier = Modifier.width(160.dp),
+                    modifier     = Modifier.width(160.dp),
                     cornerRadius = 12.dp,
-                    blurRadius = 15f
+                    blurRadius   = 15f
                 ) {
                     Text(
-                        text = text,
-                        color = Color.White,
-                        fontSize = 16.sp,
+                        text       = text,
+                        color      = Color.White,
+                        fontSize   = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                        modifier   = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
                     )
                 }
             }

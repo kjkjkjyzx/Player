@@ -3,6 +3,7 @@ package com.example.player.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
@@ -36,14 +36,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.player.ui.theme.DarkBackground
+import com.example.player.ui.components.StarryBackground
 import com.example.player.ui.theme.DarkBorder
-import com.example.player.ui.theme.DarkCard
+import com.example.player.ui.theme.DarkSurface
 import com.example.player.ui.theme.TextPrimary
 import com.example.player.ui.theme.TextSecondary
 import com.example.player.viewmodel.HomeViewModel
@@ -57,10 +59,10 @@ fun ProfileScreen(
 ) {
     var dialog by remember { mutableStateOf<String?>(null) }
 
+    StarryBackground(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
     ) {
         // 顶栏
         Row(
@@ -131,6 +133,7 @@ fun ProfileScreen(
             )
         }
     }
+    } // StarryBackground
 
     // 确认弹窗
     dialog?.let { type ->
@@ -153,7 +156,7 @@ fun ProfileScreen(
         }
         AlertDialog(
             onDismissRequest = { dialog = null },
-            containerColor   = DarkCard,
+            containerColor   = DarkSurface,
             title            = { Text(title, color = TextPrimary) },
             text             = { Text(body, color = TextSecondary) },
             confirmButton    = {
@@ -178,15 +181,45 @@ private fun SettingGroup(title: String, content: @Composable () -> Unit) {
         fontSize = 12.sp,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
     )
-    Column(
+    val shape = RoundedCornerShape(16.dp)
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(DarkCard)
-            .border(0.5.dp, DarkBorder, RoundedCornerShape(16.dp))
+            .clip(shape)
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                    Color.White.copy(alpha = 0.95f),
+                    Color.White.copy(alpha = 0.45f),
+                    Color.White.copy(alpha = 0.06f),
+                    Color.White.copy(alpha = 0.55f)
+                ),
+                    start  = Offset.Zero,
+                    end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                ),
+                shape = shape
+            )
     ) {
-        content()
+        Column(modifier = Modifier.fillMaxWidth()) {
+            content()
+        }
+        // 顶部镜面高光
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colorStops = arrayOf(
+                            0.00f to Color.White.copy(alpha = 0.55f),
+                            0.06f to Color.White.copy(alpha = 0.22f),
+                            0.18f to Color.White.copy(alpha = 0.05f),
+                            0.35f to Color.Transparent
+                        )
+                    )
+                )
+        )
     }
 }
 
@@ -207,15 +240,7 @@ private fun SettingItem(
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.Black.copy(alpha = 0.06f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
-        }
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(label, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             Text(desc, color = TextSecondary, fontSize = 12.sp)
@@ -224,7 +249,7 @@ private fun SettingItem(
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint     = Color.Black.copy(alpha = 0.25f),
+                tint     = Color.White.copy(alpha = 0.35f),
                 modifier = Modifier.size(14.dp)
             )
         }

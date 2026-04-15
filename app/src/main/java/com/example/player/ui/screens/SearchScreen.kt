@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -34,17 +33,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.player.ui.theme.DarkBackground
-import com.example.player.ui.theme.DarkSurface
+import com.example.player.ui.components.StarryBackground
 import com.example.player.ui.theme.TextPrimary
 import com.example.player.ui.theme.TextSecondary
 import com.example.player.viewmodel.HomeViewModel
@@ -63,52 +64,96 @@ fun SearchScreen(
     val results = if (query.isBlank()) emptyList()
     else videos.filter { it.displayName.contains(query, ignoreCase = true) }
 
+    val glassBorder = Brush.linearGradient(
+        colors = listOf(
+            Color.White.copy(alpha = 0.80f),
+            Color.White.copy(alpha = 0.28f),
+            Color.White.copy(alpha = 0.04f),
+            Color.White.copy(alpha = 0.40f)
+        ),
+        start  = Offset.Zero,
+        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+    )
+
+    StarryBackground(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
     ) {
-        // 顶部搜索栏（Row 布局，避免绝对定位错位）
+        // ── 标题行 ──────────────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            Text(
+                text       = "搜索",
+                color      = TextPrimary,
+                fontSize   = 26.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp
+            )
+        }
+
+        // ── 搜索栏（返回按钮 + 胶囊输入框）──────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // 圆形玻璃返回按钮
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, glassBorder, CircleShape)
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "返回",
                     tint     = TextPrimary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            TextField(
-                value         = query,
-                onValueChange = { query = it },
-                placeholder   = { Text("搜索视频名称…", color = TextSecondary, fontSize = 15.sp) },
-                leadingIcon   = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary)
-                },
-                singleLine    = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {}),
-                colors        = TextFieldDefaults.colors(
-                    focusedContainerColor   = DarkSurface,
-                    unfocusedContainerColor = DarkSurface,
-                    focusedTextColor        = TextPrimary,
-                    unfocusedTextColor      = TextPrimary,
-                    focusedIndicatorColor   = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor             = TextPrimary
-                ),
-                shape    = RoundedCornerShape(16.dp),
-                modifier = Modifier.weight(1f)
-            )
-        }
 
-        Spacer(Modifier.height(8.dp))
+            // 胶囊形搜索框
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(50.dp))
+                    .border(1.dp, glassBorder, RoundedCornerShape(50.dp))
+            ) {
+                TextField(
+                    value         = query,
+                    onValueChange = { query = it },
+                    placeholder   = { Text("搜索视频名称…", color = TextSecondary, fontSize = 15.sp) },
+                    leadingIcon   = {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary)
+                    },
+                    singleLine    = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {}),
+                    colors        = TextFieldDefaults.colors(
+                        focusedContainerColor   = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor        = TextPrimary,
+                        unfocusedTextColor      = TextPrimary,
+                        focusedIndicatorColor   = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor             = TextPrimary
+                    ),
+                    shape    = RoundedCornerShape(50.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
 
         when {
             query.isBlank() -> {
@@ -116,11 +161,11 @@ fun SearchScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
                             modifier = Modifier
-                                .size(80.dp)
+                                .size(96.dp)
                                 .clip(CircleShape)
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(Color.Black.copy(alpha = 0.06f), Color.Transparent)
+                                        listOf(Color.White.copy(alpha = 0.18f), Color.Transparent)
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -129,7 +174,7 @@ fun SearchScreen(
                                 Icons.Default.Search,
                                 contentDescription = null,
                                 tint = TextSecondary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(44.dp)
                             )
                         }
                         Spacer(Modifier.height(16.dp))
@@ -144,11 +189,11 @@ fun SearchScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
                             modifier = Modifier
-                                .size(80.dp)
+                                .size(96.dp)
                                 .clip(CircleShape)
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(Color.Black.copy(alpha = 0.06f), Color.Transparent)
+                                        listOf(Color.White.copy(alpha = 0.18f), Color.Transparent)
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -157,7 +202,7 @@ fun SearchScreen(
                                 Icons.Default.Search,
                                 contentDescription = null,
                                 tint = TextSecondary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(44.dp)
                             )
                         }
                         Spacer(Modifier.height(16.dp))
@@ -192,4 +237,5 @@ fun SearchScreen(
             }
         }
     }
+    } // StarryBackground
 }

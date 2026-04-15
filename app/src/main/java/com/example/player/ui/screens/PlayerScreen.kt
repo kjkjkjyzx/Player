@@ -29,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PlayArrow
@@ -51,8 +53,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.content.res.Configuration
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +73,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.PlayerView
 import com.example.player.ui.components.GestureOverlay
-import com.example.player.ui.components.LiquidGlassContainer
 import com.example.player.viewmodel.PlayerViewModel
 
 private val AccentWhite = Color.White
@@ -122,6 +127,9 @@ fun PlayerScreen(
         )
     }
 
+    // 锁定状态
+    var isLocked by remember { mutableStateOf(false) }
+
     // 检测是否处于画中画模式
     var isInPiP by remember { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner) {
@@ -163,16 +171,59 @@ fun PlayerScreen(
         // 画中画模式下隐藏所有控件
         if (!isInPiP) {
             GestureOverlay(
-                onToggleControls   = viewModel::toggleControls,
-                onTogglePlayPause  = viewModel::togglePlayPause,
-                onSeekBy           = viewModel::seekBy,
-                onVolumeChanged    = viewModel::updateVolume,
+                onToggleControls    = viewModel::toggleControls,
+                onTogglePlayPause   = viewModel::togglePlayPause,
+                onSeekBy            = viewModel::seekBy,
+                onVolumeChanged     = viewModel::updateVolume,
                 onBrightnessChanged = viewModel::updateBrightness,
-                modifier           = Modifier.fillMaxSize()
+                enabled             = !isLocked,
+                modifier            = Modifier.fillMaxSize()
             )
 
+            // ── 锁定按钮（锁定中或控制栏可见时显示）──────────────────────────
+            val lockGlassBrush = Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.80f),
+                    Color.White.copy(alpha = 0.28f),
+                    Color.White.copy(alpha = 0.04f),
+                    Color.White.copy(alpha = 0.40f)
+                ),
+                start = Offset.Zero,
+                end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+            )
             AnimatedVisibility(
-                visible = viewModel.controlsVisible,
+                visible = viewModel.controlsVisible || isLocked,
+                enter   = fadeIn(),
+                exit    = fadeOut()
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 20.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, lockGlassBrush, CircleShape)
+                            .background(
+                                if (isLocked) Color.White.copy(alpha = 0.15f)
+                                else Color.Transparent
+                            )
+                            .clickable { isLocked = !isLocked },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                            contentDescription = if (isLocked) "解锁" else "锁定",
+                            tint     = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            // ── 主控制栏（锁定时隐藏）──────────────────────────────────────────
+            AnimatedVisibility(
+                visible = viewModel.controlsVisible && !isLocked,
                 enter   = fadeIn(),
                 exit    = fadeOut()
             ) {
@@ -267,21 +318,45 @@ fun PlayerScreen(
                         )
                     }
 
+                    val isLandscapeMode = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                             .navigationBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical   = if (isLandscapeMode) 6.dp else 16.dp
+                            )
                     ) {
-                        LiquidGlassContainer(
-                            modifier     = Modifier.fillMaxWidth(),
-                            cornerRadius = 20.dp
+                        val bottomBarShape = RoundedCornerShape(20.dp)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(bottomBarShape)
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.95f),
+                                            Color.White.copy(alpha = 0.45f),
+                                            Color.White.copy(alpha = 0.06f),
+                                            Color.White.copy(alpha = 0.55f)
+                                        ),
+                                        start  = Offset.Zero,
+                                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                                    ),
+                                    shape = bottomBarShape
+                                )
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    .padding(
+                                        horizontal = 14.dp,
+                                        vertical   = if (isLandscapeMode) 4.dp else 10.dp
+                                    ),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 // ── 左：播放控制按钮 ──────────────────────────────
@@ -435,6 +510,21 @@ fun PlayerScreen(
                                     }
                                 }
                             }
+                            // 顶部镜面高光
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colorStops = arrayOf(
+                                                0.00f to Color.White.copy(alpha = 0.55f),
+                                                0.08f to Color.White.copy(alpha = 0.20f),
+                                                0.22f to Color.White.copy(alpha = 0.04f),
+                                                0.40f to Color.Transparent
+                                            )
+                                        )
+                                    )
+                            )
                         }
                     }
                 }

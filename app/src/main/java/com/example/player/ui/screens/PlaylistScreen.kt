@@ -39,7 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.player.ui.theme.DarkBackground
+import com.example.player.ui.components.StarryBackground
 import com.example.player.ui.theme.DarkCard
 import com.example.player.ui.theme.TextPrimary
 import com.example.player.ui.theme.TextSecondary
@@ -59,10 +59,10 @@ fun PlaylistScreen(
     // 有播放记录的视频（按文件顺序）
     val history = videos.filter { (savedPositions[it.uri.toString()] ?: 0L) > 0L }
 
+    StarryBackground(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
     ) {
         // 顶栏
         Row(
@@ -96,7 +96,7 @@ fun PlaylistScreen(
                         modifier = Modifier
                             .size(96.dp)
                             .background(
-                                Brush.radialGradient(listOf(Color.Black.copy(alpha = 0.06f), Color.Transparent)),
+                                Brush.radialGradient(listOf(Color.White.copy(alpha = 0.18f), Color.Transparent)),
                                 CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -132,6 +132,7 @@ fun PlaylistScreen(
             }
         }
     }
+    } // StarryBackground
 
     // 清除确认弹窗
     if (showClearDialog) {
@@ -145,7 +146,7 @@ fun PlaylistScreen(
                     viewModel.clearPlayHistory()
                     showClearDialog = false
                 }) {
-                    Text("清除", color = TextPrimary)
+                    Text("确认", color = TextPrimary)
                 }
             },
             dismissButton = {
