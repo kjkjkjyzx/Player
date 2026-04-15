@@ -36,58 +36,53 @@ fun LiquidGlassContainer(
     Box(
         modifier = modifier
             .shadow(
-                elevation    = if (isLight) 6.dp else 10.dp,
+                elevation    = if (isLight) 3.dp else 2.dp,
                 shape        = shape,
                 clip         = false,
-                spotColor    = Color.Black.copy(alpha = if (isLight) 0.18f else 0.45f),
-                ambientColor = Color.Black.copy(alpha = if (isLight) 0.07f else 0.15f)
+                spotColor    = Color.Black.copy(alpha = if (isLight) 0.10f else 0.12f),
+                ambientColor = Color.Black.copy(alpha = if (isLight) 0.04f else 0.05f)
             )
             .clip(shape)
             .then(clickMod)
     ) {
 
-        // ── Layer 1: 透明基底 ────────────────────────────────────────────────
+        // ── Layer 1: 磨砂基底（极薄白色，模拟磨砂感） ───────────────────────
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
-                    if (isLight) Color.White.copy(alpha = 0.10f)
-                    else         Color.Transparent
+                    Color.White.copy(alpha = if (isLight) 0.12f else 0.06f)
                 )
         )
 
-        // ── Layer 2: 顶部强镜面高光 ──────────────────────────────────────────
+        // ── Layer 2: 顶部淡高光 ──────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = if (isLight) arrayOf(
-                            0.00f to Color.White.copy(alpha = 0.18f),
-                            0.10f to Color.White.copy(alpha = 0.08f),
-                            0.30f to Color.White.copy(alpha = 0.02f),
-                            1.00f to Color.Transparent
+                            0.00f to Color.White.copy(alpha = 0.10f),
+                            0.12f to Color.White.copy(alpha = 0.04f),
+                            0.28f to Color.Transparent
                         ) else arrayOf(
-                            0.00f to Color.White.copy(alpha = 0.65f),
-                            0.06f to Color.White.copy(alpha = 0.38f),
-                            0.15f to Color.White.copy(alpha = 0.12f),
-                            0.28f to Color.White.copy(alpha = 0.02f),
-                            1.00f to Color.Transparent
+                            0.00f to Color.White.copy(alpha = 0.13f),
+                            0.10f to Color.White.copy(alpha = 0.05f),
+                            0.25f to Color.Transparent
                         )
                     )
                 )
         )
 
-        // ── Layer 3: 左上角散射光斑 ──────────────────────────────────────────
+        // ── Layer 3: 左上角极淡散射 ──────────────────────────────────────────
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.linearGradient(
                         colorStops = arrayOf(
-                            0.00f to Color.White.copy(alpha = if (isLight) 0.12f else 0.28f),
-                            0.35f to Color.White.copy(alpha = if (isLight) 0.03f else 0.06f),
-                            1.00f to Color.Transparent
+                            0.00f to Color.White.copy(alpha = if (isLight) 0.06f else 0.07f),
+                            0.35f to Color.Transparent
                         ),
                         start = Offset(0f, 0f),
                         end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
@@ -95,22 +90,13 @@ fun LiquidGlassContainer(
                 )
         )
 
-        // ── Layer 4: 棱边折射描边 ────────────────────────────────────────────
+        // ── Layer 4: 细边框（单色，极淡） ────────────────────────────────────
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = if (isLight) 0.20f else 0.95f),
-                            Color.White.copy(alpha = if (isLight) 0.10f else 0.45f),
-                            Color.White.copy(alpha = if (isLight) 0.02f else 0.06f),
-                            Color.White.copy(alpha = if (isLight) 0.12f else 0.55f)
-                        ),
-                        start = Offset(0f, 0f),
-                        end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                    ),
+                    width = 0.5.dp,
+                    color = Color.White.copy(alpha = if (isLight) 0.22f else 0.18f),
                     shape = shape
                 )
         )

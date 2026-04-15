@@ -116,7 +116,7 @@ fun PlayerScreen(
     }
     DisposableEffect(Unit) {
         onDispose {
-            (context as Activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            (context as Activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 
@@ -142,12 +142,14 @@ fun PlayerScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val isLandscapeMode = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // 视频画面
+        // ── 视频画面 ───────────────────────────────────────────────────────────
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -159,7 +161,7 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 缓冲指示器
+        // ── 缓冲指示器 ─────────────────────────────────────────────────────────
         if (viewModel.isBuffering) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
@@ -168,7 +170,7 @@ fun PlayerScreen(
             )
         }
 
-        // 画中画模式下隐藏所有控件
+        // ── 画中画模式下隐藏所有控件 ───────────────────────────────────────────
         if (!isInPiP) {
             GestureOverlay(
                 onToggleControls    = viewModel::toggleControls,
@@ -181,16 +183,6 @@ fun PlayerScreen(
             )
 
             // ── 锁定按钮（锁定中或控制栏可见时显示）──────────────────────────
-            val lockGlassBrush = Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.80f),
-                    Color.White.copy(alpha = 0.28f),
-                    Color.White.copy(alpha = 0.04f),
-                    Color.White.copy(alpha = 0.40f)
-                ),
-                start = Offset.Zero,
-                end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-            )
             AnimatedVisibility(
                 visible = viewModel.controlsVisible || isLocked,
                 enter   = fadeIn(),
@@ -203,25 +195,22 @@ fun PlayerScreen(
                             .padding(start = 20.dp)
                             .size(40.dp)
                             .clip(CircleShape)
-                            .border(1.dp, lockGlassBrush, CircleShape)
-                            .background(
-                                if (isLocked) Color.White.copy(alpha = 0.15f)
-                                else Color.Transparent
-                            )
+                            .background(Color.Black.copy(alpha = if (isLocked) 0.40f else 0.25f))
+                            .border(0.5.dp, Color.White.copy(alpha = if (isLocked) 0.35f else 0.18f), CircleShape)
                             .clickable { isLocked = !isLocked },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                             contentDescription = if (isLocked) "解锁" else "锁定",
-                            tint     = Color.White,
+                            tint = Color.White.copy(alpha = if (isLocked) 1f else 0.70f),
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 }
             }
 
-            // ── 主控制栏（锁定时隐藏）──────────────────────────────────────────
+            // ── 主控制层（锁定时隐藏）─────────────────────────────────────────
             AnimatedVisibility(
                 visible = viewModel.controlsVisible && !isLocked,
                 enter   = fadeIn(),
@@ -229,21 +218,50 @@ fun PlayerScreen(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
 
-                    // ── 顶栏 ──────────────────────────────────────────────────
+                    // ── 顶部渐变遮罩 ───────────────────────────────────────────
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (isLandscapeMode) 90.dp else 130.dp)
+                            .align(Alignment.TopCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Black.copy(alpha = 0.72f), Color.Transparent)
+                                )
+                            )
+                    )
+
+                    // ── 底部渐变遮罩 ───────────────────────────────────────────
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (isLandscapeMode) 120.dp else 180.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.82f))
+                                )
+                            )
+                    )
+
+                    // ── 顶部栏 ─────────────────────────────────────────────────
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.TopCenter)
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical   = if (isLandscapeMode) 10.dp else 14.dp
+                            ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 圆形返回按钮（毛玻璃胶囊）
+                        // 返回按钮
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.4f))
-                                .border(0.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                                .background(Color.Black.copy(alpha = 0.28f))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.18f), CircleShape)
                                 .clickable(onClick = onBack),
                             contentAlignment = Alignment.Center
                         ) {
@@ -255,18 +273,18 @@ fun PlayerScreen(
                             )
                         }
 
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(12.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "正在播放",
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = Color.White.copy(alpha = 0.45f),
                                 fontSize = 10.sp,
-                                letterSpacing = 0.3.sp
+                                letterSpacing = 0.4.sp
                             )
                             Text(
                                 text = viewModel.videoTitle,
-                                color = Color.White,
+                                color = Color.White.copy(alpha = 0.92f),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
@@ -274,13 +292,15 @@ fun PlayerScreen(
                             )
                         }
 
+                        Spacer(Modifier.width(12.dp))
+
                         // 画中画按钮
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.4f))
-                                .border(0.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                                .background(Color.Black.copy(alpha = 0.28f))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.18f), CircleShape)
                                 .clickable {
                                     (context as Activity).enterPictureInPictureMode(
                                         PictureInPictureParams.Builder()
@@ -300,231 +320,141 @@ fun PlayerScreen(
                         }
                     }
 
-                    // ── 底部区域 ──────────────────────────────────────────────
-                    // ── 底部控制栏（单层玻璃容器，三列布局）────────────────────
+                    // ── 中央播放控制 ────────────────────────────────────────────
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(bottom = if (isLandscapeMode) 0.dp else 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            if (isLandscapeMode) 14.dp else 22.dp
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 跳到开头
+                        IconButton(
+                            onClick  = { viewModel.seekTo(0L) },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(Icons.Default.SkipPrevious, "跳到开头",
+                                tint = Color.White.copy(alpha = 0.50f),
+                                modifier = Modifier.size(26.dp))
+                        }
+                        // 快退 10s
+                        IconButton(
+                            onClick  = { viewModel.seekBy(-10_000L) },
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Icon(Icons.Default.Replay10, "快退10秒",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp))
+                        }
+                        // 播放 / 暂停（主按钮）
+                        Box(
+                            modifier = Modifier
+                                .size(if (isLandscapeMode) 56.dp else 64.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.18f))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.28f), CircleShape)
+                                .clickable { viewModel.togglePlayPause() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (viewModel.isPlaying) Icons.Default.Pause
+                                              else Icons.Default.PlayArrow,
+                                contentDescription = if (viewModel.isPlaying) "暂停" else "播放",
+                                tint = Color.White,
+                                modifier = Modifier.size(if (isLandscapeMode) 28.dp else 32.dp)
+                            )
+                        }
+                        // 快进 30s
+                        IconButton(
+                            onClick  = { viewModel.seekBy(30_000L) },
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Icon(Icons.Default.Forward30, "快进30秒",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp))
+                        }
+                        // 跳到末尾
+                        IconButton(
+                            onClick  = {
+                                if (viewModel.duration > 0)
+                                    viewModel.seekTo(viewModel.duration - 500)
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(Icons.Default.SkipNext, "跳到末尾",
+                                tint = Color.White.copy(alpha = 0.50f),
+                                modifier = Modifier.size(26.dp))
+                        }
+                    }
+
+                    // ── 底部：进度条 + 时间 + 速度 ────────────────────────────
                     val speedText = when (viewModel.playbackSpeed) {
                         0.5f  -> "0.5×"
-                        1.0f  -> "1.0×"
+                        1.0f  -> "1×"
                         1.25f -> "1.25×"
                         1.5f  -> "1.5×"
-                        2.0f  -> "2.0×"
+                        2.0f  -> "2×"
                         else  -> "${viewModel.playbackSpeed}×"
                     }
-                    val enterPiP = {
-                        (context as Activity).enterPictureInPictureMode(
-                            PictureInPictureParams.Builder()
-                                .setAspectRatio(Rational(16, 9))
-                                .build()
-                        )
-                    }
 
-                    val isLandscapeMode = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter)
                             .navigationBarsPadding()
                             .padding(
-                                horizontal = 16.dp,
-                                vertical   = if (isLandscapeMode) 6.dp else 16.dp
-                            )
+                                horizontal = 20.dp,
+                                vertical   = if (isLandscapeMode) 6.dp else 18.dp
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        val bottomBarShape = RoundedCornerShape(20.dp)
-                        Box(
+                        // 进度条
+                        Slider(
+                            value = if (viewModel.duration > 0)
+                                viewModel.currentPosition.toFloat() / viewModel.duration
+                            else 0f,
+                            onValueChange = { frac ->
+                                if (viewModel.duration > 0)
+                                    viewModel.seekTo((frac * viewModel.duration).toLong())
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor         = Color.White,
+                                activeTrackColor   = Color.White,
+                                inactiveTrackColor = Color.White.copy(alpha = 0.28f)
+                            )
+                        )
+                        // 时间 + 速度切换
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(bottomBarShape)
-                                .border(
-                                    width = 1.dp,
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.95f),
-                                            Color.White.copy(alpha = 0.45f),
-                                            Color.White.copy(alpha = 0.06f),
-                                            Color.White.copy(alpha = 0.55f)
-                                        ),
-                                        start  = Offset.Zero,
-                                        end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                    ),
-                                    shape = bottomBarShape
-                                )
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        horizontal = 14.dp,
-                                        vertical   = if (isLandscapeMode) 4.dp else 10.dp
-                                    ),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // ── 左：播放控制按钮 ──────────────────────────────
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                    verticalAlignment     = Alignment.CenterVertically
-                                ) {
-                                    // 上一个
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .clickable { viewModel.seekTo(0L) },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.SkipPrevious, "上一个",
-                                            tint = Color.White.copy(alpha = 0.55f),
-                                            modifier = Modifier.size(18.dp))
-                                    }
-                                    // 快退 10s
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .clickable { viewModel.seekBy(-10_000L) },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.Replay10, "快退10秒",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp))
-                                    }
-                                    // 播放/暂停
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                            .background(Color.White.copy(alpha = 0.15f))
-                                            .border(0.5.dp, Color.White.copy(alpha = 0.30f), CircleShape)
-                                            .clickable { viewModel.togglePlayPause() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = if (viewModel.isPlaying) Icons.Default.Pause
-                                                          else Icons.Default.PlayArrow,
-                                            contentDescription = if (viewModel.isPlaying) "暂停" else "播放",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                    // 快进 30s
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .clickable { viewModel.seekBy(30_000L) },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.Forward30, "快进30秒",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp))
-                                    }
-                                    // 下一个
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .clickable {
-                                                if (viewModel.duration > 0)
-                                                    viewModel.seekTo(viewModel.duration - 500)
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.SkipNext, "下一个",
-                                            tint = Color.White.copy(alpha = 0.55f),
-                                            modifier = Modifier.size(18.dp))
-                                    }
-                                }
-
-                                Spacer(Modifier.width(10.dp))
-
-                                // ── 中：进度条 + 时间 ─────────────────────────────
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Slider(
-                                        value = if (viewModel.duration > 0)
-                                            viewModel.currentPosition.toFloat() / viewModel.duration
-                                        else 0f,
-                                        onValueChange = { frac ->
-                                            if (viewModel.duration > 0)
-                                                viewModel.seekTo((frac * viewModel.duration).toLong())
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = SliderDefaults.colors(
-                                            thumbColor         = AccentWhite,
-                                            activeTrackColor   = AccentWhite,
-                                            inactiveTrackColor = Color.White.copy(alpha = 0.25f)
-                                        )
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 4.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(formatTime(viewModel.currentPosition),
-                                            color = Color.White.copy(alpha = 0.85f), fontSize = 10.sp)
-                                        Text(formatTime(viewModel.duration),
-                                            color = Color.White.copy(alpha = 0.45f), fontSize = 10.sp)
-                                    }
-                                }
-
-                                Spacer(Modifier.width(10.dp))
-
-                                // ── 右：速度 + 画中画 ─────────────────────────────
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    // 速度切换
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(CardBg)
-                                            .border(0.5.dp, CardBorder, RoundedCornerShape(8.dp))
-                                            .clickable { viewModel.cycleSpeed() }
-                                            .padding(horizontal = 10.dp, vertical = 5.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(speedText,
-                                                color = Color.White,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.SemiBold)
-                                            Text("速度",
-                                                color = Color.White.copy(alpha = 0.45f),
-                                                fontSize = 9.sp)
-                                        }
-                                    }
-                                    // 画中画
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(CardBg)
-                                            .border(0.5.dp, CardBorder, CircleShape)
-                                            .clickable { enterPiP() },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.PictureInPicture, "画中画",
-                                            tint = Color.White.copy(alpha = 0.85f),
-                                            modifier = Modifier.size(14.dp))
-                                    }
-                                }
-                            }
-                            // 顶部镜面高光
+                            Text(
+                                text = "${formatTime(viewModel.currentPosition)} / ${formatTime(viewModel.duration)}",
+                                color = Color.White.copy(alpha = 0.72f),
+                                fontSize = 11.sp
+                            )
                             Box(
                                 modifier = Modifier
-                                    .matchParentSize()
-                                    .background(
-                                        Brush.verticalGradient(
-                                            colorStops = arrayOf(
-                                                0.00f to Color.White.copy(alpha = 0.55f),
-                                                0.08f to Color.White.copy(alpha = 0.20f),
-                                                0.22f to Color.White.copy(alpha = 0.04f),
-                                                0.40f to Color.Transparent
-                                            )
-                                        )
-                                    )
-                            )
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White.copy(alpha = 0.10f))
+                                    .border(0.5.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(6.dp))
+                                    .clickable { viewModel.cycleSpeed() }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = speedText,
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
