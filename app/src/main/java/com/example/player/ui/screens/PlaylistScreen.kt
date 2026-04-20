@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.example.player.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +46,12 @@ import com.example.player.ui.theme.DarkCard
 import com.example.player.ui.theme.TextPrimary
 import com.example.player.ui.theme.TextSecondary
 import com.example.player.viewmodel.HomeViewModel
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import com.example.player.ui.theme.AppSpring
 
 @Composable
 fun PlaylistScreen(
@@ -73,18 +81,23 @@ fun PlaylistScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = TextPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
             }
             Text(
-                text       = "最近播放",
+                text       = stringResource(R.string.playlist_title),
                 color      = TextPrimary,
                 fontSize   = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier   = Modifier.weight(1f)
             )
-            if (history.isNotEmpty()) {
+            // 清空按钮：仅有历史记录时出现，弹性 scale+fade 入场（iOS：图标从小弹出）
+            AnimatedVisibility(
+                visible = history.isNotEmpty(),
+                enter   = fadeIn(AppSpring.standard()) + scaleIn(AppSpring.press(), initialScale = 0.72f),
+                exit    = fadeOut(AppSpring.gentle())  + scaleOut(AppSpring.gentle(), targetScale = 0.72f)
+            ) {
                 IconButton(onClick = { showClearDialog = true }) {
-                    Icon(Icons.Default.DeleteSweep, contentDescription = "清除记录", tint = TextSecondary)
+                    Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.playlist_clear_action), tint = TextSecondary)
                 }
             }
         }
@@ -104,14 +117,14 @@ fun PlaylistScreen(
                         Icon(Icons.Default.Queue, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(40.dp))
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text("暂无播放记录", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.playlist_empty_title), color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(6.dp))
-                    Text("播放过的视频会显示在这里", color = TextSecondary, fontSize = 13.sp)
+                    Text(stringResource(R.string.playlist_empty_desc), color = TextSecondary, fontSize = 13.sp)
                 }
             }
         } else {
             Text(
-                text     = "共 ${history.size} 个视频",
+                text     = stringResource(R.string.playlist_video_count, history.size),
                 color    = TextSecondary,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -120,13 +133,18 @@ fun PlaylistScreen(
                 contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(history, key = { it.uri.toString() }) { video ->
+                items(history, key = { it.uri.toString() }, contentType = { "video" }) { video ->
                     VideoCard(
                         video           = video,
                         savedPositionMs = savedPositions[video.uri.toString()] ?: 0L,
                         isFavorite      = favorites.contains(video.uri.toString()),
                         onFavoriteClick = { viewModel.toggleFavorite(video.uri) },
-                        onClick         = { onVideoSelected(video.uri) }
+                        onClick         = { onVideoSelected(video.uri) },
+                        modifier        = Modifier.animateItem(
+                            placementSpec = AppSpring.standard(),
+                            fadeInSpec    = AppSpring.gentle(),
+                            fadeOutSpec   = AppSpring.gentle()
+                        )
                     )
                 }
             }
@@ -139,19 +157,19 @@ fun PlaylistScreen(
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             containerColor   = DarkCard,
-            title            = { Text("清除播放记录", color = TextPrimary) },
-            text             = { Text("将清除所有视频的播放进度，此操作不可撤销。", color = TextSecondary) },
+            title            = { Text(stringResource(R.string.playlist_clear_dialog_title), color = TextPrimary) },
+            text             = { Text(stringResource(R.string.playlist_clear_dialog_msg), color = TextSecondary) },
             confirmButton    = {
                 TextButton(onClick = {
                     viewModel.clearPlayHistory()
                     showClearDialog = false
                 }) {
-                    Text("确认", color = TextPrimary)
+                    Text(stringResource(R.string.action_confirm), color = TextPrimary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("取消", color = TextSecondary)
+                    Text(stringResource(R.string.action_cancel), color = TextSecondary)
                 }
             }
         )

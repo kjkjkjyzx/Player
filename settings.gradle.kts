@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Player"
 include(":app")
+include(":baselineprofile")

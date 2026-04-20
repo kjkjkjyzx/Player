@@ -7,6 +7,9 @@ import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import com.example.player.ui.theme.AppSpring
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -27,6 +30,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import com.example.player.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,7 +89,7 @@ fun GestureOverlay(
         val next = (cur - normalizedDelta * max).roundToInt().coerceIn(0, max)
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, next, 0)
         val percent = if (max > 0) (next * 100f / max).roundToInt() else 0
-        showHint("音量 ${percent}%")
+        showHint(context.getString(R.string.gesture_volume, percent))
         onVolumeChanged(percent)
     }
 
@@ -97,7 +101,7 @@ fun GestureOverlay(
         lp.screenBrightness = next
         activity.window.attributes = lp
         val percent = (next * 100).roundToInt()
-        showHint("亮度 ${percent}%")
+        showHint(context.getString(R.string.gesture_brightness, percent))
         onBrightnessChanged(percent)
     }
 
@@ -156,10 +160,11 @@ fun GestureOverlay(
             }
             .then(dragModifier)
     ) {
+        // iOS 26：手势提示弹窗以 scale+fade 弹出（类 iOS Toast 质感），消失时柔和收缩
         AnimatedVisibility(
             visible  = hintText != null,
-            enter    = fadeIn(),
-            exit     = fadeOut(),
+            enter    = scaleIn(AppSpring.press(), initialScale = 0.72f) + fadeIn(AppSpring.standard()),
+            exit     = scaleOut(AppSpring.gentle(), targetScale = 0.88f) + fadeOut(AppSpring.gentle()),
             modifier = Modifier.align(Alignment.Center)
         ) {
             hintText?.let { text ->

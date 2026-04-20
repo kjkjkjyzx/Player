@@ -1,11 +1,8 @@
 package com.example.player.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,14 +32,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.player.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.player.ui.components.LiquidGlassContainer
 import com.example.player.ui.components.StarryBackground
 import com.example.player.ui.theme.DarkBorder
 import com.example.player.ui.theme.DarkSurface
@@ -58,6 +56,12 @@ fun ProfileScreen(
     onBack: () -> Unit
 ) {
     var dialog by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val versionName = remember(context) {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "-"
+    }
 
     StarryBackground(modifier = Modifier.fillMaxSize()) {
     Column(
@@ -73,10 +77,10 @@ fun ProfileScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = TextPrimary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
             }
             Text(
-                text       = "我的",
+                text       = stringResource(R.string.profile_title),
                 color      = TextPrimary,
                 fontSize   = 18.sp,
                 fontWeight = FontWeight.SemiBold
@@ -86,12 +90,12 @@ fun ProfileScreen(
         Spacer(Modifier.height(16.dp))
 
         // 设置分组 - 数据管理
-        SettingGroup(title = "数据管理") {
+        SettingGroup(title = stringResource(R.string.profile_group_data)) {
             SettingItem(
                 icon      = Icons.Default.History,
                 iconTint  = DangerColor,
-                label     = "清除播放历史",
-                desc      = "清除所有视频的观看进度",
+                label     = stringResource(R.string.profile_clear_history),
+                desc      = stringResource(R.string.profile_clear_history_desc),
                 onClick   = { dialog = "history" }
             )
             HorizontalDivider(
@@ -102,20 +106,20 @@ fun ProfileScreen(
             SettingItem(
                 icon      = Icons.Default.FavoriteBorder,
                 iconTint  = DangerColor,
-                label     = "清除收藏",
-                desc      = "清空所有已收藏的视频",
+                label     = stringResource(R.string.profile_clear_favorites),
+                desc      = stringResource(R.string.profile_clear_favorites_desc),
                 onClick   = { dialog = "favorites" }
             )
         }
 
         Spacer(Modifier.height(16.dp))
 
-        SettingGroup(title = "关于") {
+        SettingGroup(title = stringResource(R.string.profile_group_about)) {
             SettingItem(
                 icon      = Icons.Default.Info,
                 iconTint  = TextPrimary,
-                label     = "版本信息",
-                desc      = "液态玻璃播放器 v1.0.0",
+                label     = stringResource(R.string.profile_version),
+                desc      = stringResource(R.string.profile_version_desc, versionName),
                 showArrow = false,
                 onClick   = {}
             )
@@ -127,8 +131,8 @@ fun ProfileScreen(
             SettingItem(
                 icon      = Icons.Default.DeleteForever,
                 iconTint  = DangerColor,
-                label     = "清除缓存",
-                desc      = "清除缩略图等本地缓存",
+                label     = stringResource(R.string.profile_clear_cache),
+                desc      = stringResource(R.string.profile_clear_cache_desc),
                 onClick   = { dialog = "cache" }
             )
         }
@@ -139,19 +143,19 @@ fun ProfileScreen(
     dialog?.let { type ->
         val (title, body, action) = when (type) {
             "history"   -> Triple(
-                "清除播放历史",
-                "将清除所有视频的播放进度，此操作不可撤销。",
+                stringResource(R.string.profile_clear_history),
+                stringResource(R.string.profile_clear_history_dialog_msg),
                 { viewModel.clearPlayHistory() }
             )
             "favorites" -> Triple(
-                "清除收藏",
-                "将清空所有已收藏的视频，此操作不可撤销。",
+                stringResource(R.string.profile_clear_favorites),
+                stringResource(R.string.profile_clear_favorites_dialog_msg),
                 { viewModel.clearFavorites() }
             )
             else        -> Triple(
-                "清除缓存",
-                "将删除本地缩略图缓存，下次打开列表时会重新生成。",
-                { /* Coil 缓存清理可在此处调用 */ }
+                stringResource(R.string.profile_clear_cache),
+                stringResource(R.string.profile_clear_cache_dialog_msg),
+                {}
             )
         }
         AlertDialog(
@@ -160,13 +164,27 @@ fun ProfileScreen(
             title            = { Text(title, color = TextPrimary) },
             text             = { Text(body, color = TextSecondary) },
             confirmButton    = {
-                TextButton(onClick = { action(); dialog = null }) {
-                    Text("确认", color = TextPrimary)
+                TextButton(onClick = {
+                    if (type == "cache") {
+                        viewModel.clearThumbnailCache { ok ->
+                            Toast.makeText(
+                                context,
+                                if (ok) context.getString(R.string.profile_clear_cache_success)
+                                else context.getString(R.string.profile_clear_cache_failed),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        action()
+                    }
+                    dialog = null
+                }) {
+                    Text(stringResource(R.string.action_confirm), color = TextPrimary)
                 }
             },
             dismissButton    = {
                 TextButton(onClick = { dialog = null }) {
-                    Text("取消", color = TextSecondary)
+                    Text(stringResource(R.string.action_cancel), color = TextSecondary)
                 }
             }
         )
@@ -181,45 +199,15 @@ private fun SettingGroup(title: String, content: @Composable () -> Unit) {
         fontSize = 12.sp,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
     )
-    val shape = RoundedCornerShape(16.dp)
-    Box(
-        modifier = Modifier
+    LiquidGlassContainer(
+        modifier     = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(shape)
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                    Color.White.copy(alpha = 0.95f),
-                    Color.White.copy(alpha = 0.45f),
-                    Color.White.copy(alpha = 0.06f),
-                    Color.White.copy(alpha = 0.55f)
-                ),
-                    start  = Offset.Zero,
-                    end    = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                ),
-                shape = shape
-            )
+            .padding(horizontal = 16.dp),
+        cornerRadius = 16.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             content()
         }
-        // 顶部镜面高光
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0.00f to Color.White.copy(alpha = 0.55f),
-                            0.06f to Color.White.copy(alpha = 0.22f),
-                            0.18f to Color.White.copy(alpha = 0.05f),
-                            0.35f to Color.Transparent
-                        )
-                    )
-                )
-        )
     }
 }
 

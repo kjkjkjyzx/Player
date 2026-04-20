@@ -1,3 +1,137 @@
 <resources>
     <string name="app_name">Player</string>
+
+    <!-- 通用动作 -->
+    <string name="action_confirm">确认</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_retry">重试</string>
+    <string name="action_delete">删除</string>
+    <string name="action_remove">移除</string>
+    <string name="action_create">创建</string>
+
+    <!-- 通用 contentDescription -->
+    <string name="cd_back">返回</string>
+    <string name="cd_add">添加</string>
+    <string name="cd_favorite">收藏</string>
+    <string name="cd_unfavorite">取消收藏</string>
+
+    <!-- 播放器 -->
+    <string name="cd_lock">锁定</string>
+    <string name="cd_unlock">解锁</string>
+    <string name="cd_pip">画中画</string>
+    <string name="cd_play">播放</string>
+    <string name="cd_pause">暂停</string>
+    <string name="cd_skip_to_start">跳到开头</string>
+    <string name="cd_skip_to_end">跳到末尾</string>
+    <string name="cd_replay_10">快退10秒</string>
+    <string name="cd_forward_30">快进30秒</string>
+    <string name="player_now_playing">正在播放</string>
+    <string name="player_connection_error">无法连接播放服务，请重试</string>
+
+    <!-- 手势提示 -->
+    <string name="gesture_volume">音量 %1$d%%</string>
+    <string name="gesture_brightness">亮度 %1$d%%</string>
+
+    <!-- 排序选项 -->
+    <string name="sort_date_desc">最新修改</string>
+    <string name="sort_date_asc">最早修改</string>
+    <string name="sort_name_asc">名称 A-Z</string>
+    <string name="sort_size_desc">文件最大</string>
+    <string name="sort_duration_desc">时长最长</string>
+
+    <!-- 首页 -->
+    <string name="home_library">我的媒体库</string>
+    <string name="home_videos">视频</string>
+    <string name="home_filter">筛选</string>
+    <string name="home_sort">排序方式</string>
+    <string name="home_tab_all">全部</string>
+    <string name="home_tab_recent">最近播放</string>
+    <string name="home_tab_favorite">收藏</string>
+    <string name="home_tab_folder">文件夹</string>
+    <string name="home_new_folder">新建文件夹</string>
+    <string name="home_folder_empty_title">文件夹为空</string>
+    <string name="home_folder_empty_desc">长按视频卡片拖入此文件夹</string>
+    <string name="home_drop_target">拖放到文件夹</string>
+    <string name="home_delete_folder_title">删除文件夹</string>
+    <string name="home_delete_folder_desc">确认删除「%1$s」？视频文件不会受影响。</string>
+    <string name="home_hide_video_title">从列表移除</string>
+    <string name="home_hide_video_desc">将「%1$s」从列表中移除？视频文件不会被删除。</string>
+    <string name="home_remove_from_folder_title">移除视频</string>
+    <string name="home_remove_from_folder_desc">将「%1$s」从文件夹中移除？视频文件不会被删除。</string>
+    <string name="home_create_folder_title">新建文件夹</string>
+    <string name="home_folder_name_placeholder">文件夹名称</string>
+    <string name="home_folder_video_count">%1$d 个视频</string>
+    <string name="home_pick_video">选择视频</string>
+
+    <!-- 空态 -->
+    <string name="empty_recent_title">暂无播放记录</string>
+    <string name="empty_favorite_title">还没有收藏的视频</string>
+    <string name="empty_folders_title">还没有文件夹</string>
+    <string name="empty_all_title">暂无本地视频</string>
+    <string name="empty_recent_desc">开始播放一个视频后会显示在这里</string>
+    <string name="empty_favorite_desc">长按视频卡片上的♡图标即可收藏</string>
+    <string name="empty_folders_desc">点击上方「新建文件夹」开始分组</string>
+    <string name="empty_all_desc">点击下方「＋」按钮选择视频文件</string>
+
+    <!-- 错误 -->
+    <string name="error_permission_title">无法访问媒体库</string>
+    <string name="error_io_title">读取视频失败</string>
+    <string name="error_unknown_title">出错了</string>
+    <string name="error_permission_desc">请在系统设置中授予「读取媒体文件」权限</string>
+    <string name="error_io_desc_fallback">请稍后重试</string>
+    <string name="error_unknown_desc_fallback">发生未知错误</string>
+
+    <!-- 视频卡片 -->
+    <string name="card_last_position">上次播放到 %1$s</string>
+    <string name="card_not_played">未播放</string>
+    <string name="unknown_video">未知视频</string>
+
+    <!-- 底部导航 -->
+    <string name="nav_library">媒体库</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_list">列表</string>
+    <string name="nav_profile">我的</string>
+    <string name="nav_import">导入</string>
+
+    <!-- 搜索 -->
+    <string name="search_title">搜索</string>
+    <string name="search_placeholder">搜索视频名称…</string>
+    <string name="search_empty_title">输入关键词搜索视频</string>
+    <string name="search_empty_desc">支持拼音首字母 / 全拼模糊匹配</string>
+    <string name="search_not_found">未找到相关视频</string>
+    <string name="search_result_count">找到 %1$d 个结果</string>
+
+    <!-- 筛选 chips -->
+    <string name="filter_all">全部</string>
+    <string name="filter_favorite">仅收藏</string>
+    <string name="filter_landscape">仅横屏</string>
+    <string name="filter_recent">最近播放</string>
+    <string name="filter_large">大于 1 GB</string>
+
+    <!-- 我的 -->
+    <string name="profile_title">我的</string>
+    <string name="profile_group_data">数据管理</string>
+    <string name="profile_clear_history">清除播放历史</string>
+    <string name="profile_clear_history_desc">清除所有视频的观看进度</string>
+    <string name="profile_clear_favorites">清除收藏</string>
+    <string name="profile_clear_favorites_desc">清空所有已收藏的视频</string>
+    <string name="profile_group_about">关于</string>
+    <string name="profile_version">版本信息</string>
+    <string name="profile_version_desc">v%1$s</string>
+    <string name="profile_clear_cache">清除缓存</string>
+    <string name="profile_clear_cache_desc">清除缩略图等本地缓存</string>
+    <string name="profile_clear_history_dialog_msg">将清除所有视频的播放进度，此操作不可撤销。</string>
+    <string name="profile_clear_favorites_dialog_msg">将清空所有已收藏的视频，此操作不可撤销。</string>
+    <string name="profile_clear_cache_dialog_msg">将删除本地缩略图缓存，下次打开列表时会重新生成。</string>
+    <string name="profile_clear_cache_success">缓存已清除</string>
+    <string name="profile_clear_cache_failed">清除缓存失败，请稍后重试</string>
+
+    <!-- 播放列表 -->
+    <string name="playlist_title">最近播放</string>
+    <string name="playlist_clear_action">清除记录</string>
+    <string name="playlist_empty_title">暂无播放记录</string>
+    <string name="playlist_empty_desc">播放过的视频会显示在这里</string>
+    <string name="playlist_video_count">共 %1$d 个视频</string>
+    <string name="playlist_clear_dialog_title">清除播放记录</string>
+    <string name="playlist_clear_dialog_msg">将清除所有视频的播放进度，此操作不可撤销。</string>
 </resources>

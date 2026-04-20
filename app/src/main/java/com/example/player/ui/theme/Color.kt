@@ -11,17 +11,17 @@ val PrimaryBlue = Color(0xFF82A8FF)   // 在深色背景上更亮的蓝色
 val GradientStart = Color(0xFF8899FF)
 val GradientEnd   = Color(0xFFAA66CC)
 
-// 星空备用纯色渐变（无 Canvas 时的回退）
+// 深渊极简备用渐变（无 Canvas 时的回退）
 val AppGradient = Brush.linearGradient(
-    colors = listOf(Color(0xFF0C1030), Color(0xFF060818)),
+    colors = listOf(Color(0xFF08090F), Color(0xFF040407)),
     start  = Offset.Zero,
     end    = Offset(x = Float.POSITIVE_INFINITY, y = Float.POSITIVE_INFINITY)
 )
 
-// 深空背景系（与 StarryBackground 配套）
-val DarkBackground  = Color(0xFF0C1030)   // 深靛蓝，Scaffold containerColor fallback
-val DarkSurface     = Color(0xFF131A40)   // 稍亮深蓝，底部弹窗 / 对话框背景
-val DarkCard        = Color(0xFF1B2250)   // 中深蓝，卡片 / 列表项背景
+// 深渊背景系（Abyss 风格，与 StarryBackground 配套）
+val DarkBackground  = Color(0xFF08090F)   // 近纯黑带蓝，Scaffold containerColor fallback
+val DarkSurface     = Color(0xFF0E0F1A)   // 深黑略带紫，底部弹窗 / 对话框背景
+val DarkCard        = Color(0xFF14151F)   // 深黑卡片，AlertDialog containerColor
 val DarkBorder      = Color(0x33FFFFFF)   // 20% white，主要分割线 / 边框
 val DarkBorderLight = Color(0x40FFFFFF)   // 25% white，细节边框
 
@@ -34,5 +34,5 @@ val TextTertiary  = Color(0x73FFFFFF)     // 45% white
 val ChipSelected   = Color(0xFFFFFFFF)    // 选中：白色
 val ChipUnselected = Color(0x26FFFFFF)    // 未选中：15% white
 
-// 底部导航栏（深蓝半透明，与星空融合）
-val NavBarBg = Color(0xE00C1030)
+// 底部导航栏（近纯黑半透明，与深渊背景融合）
+val NavBarBg = Color(0xE008090F)

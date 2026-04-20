@@ -8,7 +8,8 @@ data class VideoItem(
     val uri: Uri,
     val displayName: String,
     val duration: Long,
-    val size: Long
+    val size: Long,
+    val isLandscape: Boolean = false    // 从 MediaStore WIDTH/HEIGHT 或 MediaMetadataRetriever 读取
 ) {
     val durationFormatted: String
         get() {

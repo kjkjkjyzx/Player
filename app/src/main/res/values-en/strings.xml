@@ -1,0 +1,119 @@
+<resources>
+    <string name="app_name">Player</string>
+
+    <string name="action_confirm">Confirm</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_create">Create</string>
+
+    <string name="cd_back">Back</string>
+    <string name="cd_add">Add</string>
+    <string name="cd_favorite">Favorite</string>
+    <string name="cd_unfavorite">Unfavorite</string>
+
+    <string name="cd_lock">Lock</string>
+    <string name="cd_unlock">Unlock</string>
+    <string name="cd_pip">Picture in picture</string>
+    <string name="cd_play">Play</string>
+    <string name="cd_pause">Pause</string>
+    <string name="cd_skip_to_start">Skip to start</string>
+    <string name="cd_skip_to_end">Skip to end</string>
+    <string name="cd_replay_10">Rewind 10 seconds</string>
+    <string name="cd_forward_30">Forward 30 seconds</string>
+    <string name="player_now_playing">Now playing</string>
+
+    <string name="gesture_volume">Volume %1$d%%</string>
+    <string name="gesture_brightness">Brightness %1$d%%</string>
+
+    <string name="sort_date_desc">Newest</string>
+    <string name="sort_date_asc">Oldest</string>
+    <string name="sort_name_asc">Name A-Z</string>
+    <string name="sort_size_desc">Largest file</string>
+    <string name="sort_duration_desc">Longest duration</string>
+
+    <string name="home_library">My Library</string>
+    <string name="home_videos">Videos</string>
+    <string name="home_filter">Filter</string>
+    <string name="home_sort">Sort by</string>
+    <string name="home_tab_all">All</string>
+    <string name="home_tab_recent">Recent</string>
+    <string name="home_tab_favorite">Favorites</string>
+    <string name="home_tab_folder">Folders</string>
+    <string name="home_new_folder">New folder</string>
+    <string name="home_folder_empty_title">Folder is empty</string>
+    <string name="home_folder_empty_desc">Long-press a video card and drag it here</string>
+    <string name="home_drop_target">Drop into folder</string>
+    <string name="home_delete_folder_title">Delete folder</string>
+    <string name="home_delete_folder_desc">Delete \u201C%1$s\u201D? Video files will not be affected.</string>
+    <string name="home_hide_video_title">Remove from list</string>
+    <string name="home_hide_video_desc">Remove \u201C%1$s\u201D from the list? The video file will not be deleted.</string>
+    <string name="home_remove_from_folder_title">Remove video</string>
+    <string name="home_remove_from_folder_desc">Remove \u201C%1$s\u201D from this folder? The video file will not be deleted.</string>
+    <string name="home_create_folder_title">New folder</string>
+    <string name="home_folder_name_placeholder">Folder name</string>
+    <string name="home_folder_video_count">%1$d videos</string>
+    <string name="home_pick_video">Pick video</string>
+
+    <string name="empty_recent_title">No playback history</string>
+    <string name="empty_favorite_title">No favorites yet</string>
+    <string name="empty_folders_title">No folders yet</string>
+    <string name="empty_all_title">No local videos</string>
+    <string name="empty_recent_desc">Videos you play will appear here</string>
+    <string name="empty_favorite_desc">Long-press the heart icon on a card to favorite</string>
+    <string name="empty_folders_desc">Tap \u201CNew folder\u201D above to start organizing</string>
+    <string name="empty_all_desc">Tap the \u201C+\u201D button below to pick a video</string>
+
+    <string name="error_permission_title">Media library unavailable</string>
+    <string name="error_io_title">Failed to load videos</string>
+    <string name="error_unknown_title">Something went wrong</string>
+    <string name="error_permission_desc">Please grant \u201CRead media files\u201D permission in Settings</string>
+    <string name="error_io_desc_fallback">Please try again later</string>
+    <string name="error_unknown_desc_fallback">An unknown error occurred</string>
+
+    <string name="card_last_position">Last played at %1$s</string>
+    <string name="card_not_played">Not played</string>
+    <string name="unknown_video">Unknown video</string>
+
+    <string name="nav_library">Library</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_list">List</string>
+    <string name="nav_profile">Me</string>
+
+    <string name="search_title">Search</string>
+    <string name="search_placeholder">Search video name…</string>
+    <string name="search_empty_title">Search for videos</string>
+    <string name="search_empty_desc">Supports pinyin initials / full pinyin matching</string>
+    <string name="search_not_found">No results found</string>
+    <string name="search_result_count">%1$d results</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_favorite">Favorites only</string>
+    <string name="filter_landscape">Landscape only</string>
+    <string name="filter_recent">Recently played</string>
+    <string name="filter_large">&gt; 1 GB</string>
+
+    <string name="profile_title">Me</string>
+    <string name="profile_group_data">Data</string>
+    <string name="profile_clear_history">Clear history</string>
+    <string name="profile_clear_history_desc">Clear watch progress for all videos</string>
+    <string name="profile_clear_favorites">Clear favorites</string>
+    <string name="profile_clear_favorites_desc">Remove all favorited videos</string>
+    <string name="profile_group_about">About</string>
+    <string name="profile_version">Version</string>
+    <string name="profile_version_desc">Liquid Glass Player v1.0.0</string>
+    <string name="profile_clear_cache">Clear cache</string>
+    <string name="profile_clear_cache_desc">Delete thumbnails and other local caches</string>
+    <string name="profile_clear_history_dialog_msg">This will clear playback progress for all videos. This action cannot be undone.</string>
+    <string name="profile_clear_favorites_dialog_msg">This will remove all favorited videos. This action cannot be undone.</string>
+    <string name="profile_clear_cache_dialog_msg">This will delete local thumbnail caches. They will be regenerated the next time you open the list.</string>
+
+    <string name="playlist_title">Recent</string>
+    <string name="playlist_clear_action">Clear history</string>
+    <string name="playlist_empty_title">No playback history</string>
+    <string name="playlist_empty_desc">Videos you play will appear here</string>
+    <string name="playlist_video_count">%1$d videos total</string>
+    <string name="playlist_clear_dialog_title">Clear history</string>
+    <string name="playlist_clear_dialog_msg">This will clear playback progress for all videos. This action cannot be undone.</string>
+</resources>
