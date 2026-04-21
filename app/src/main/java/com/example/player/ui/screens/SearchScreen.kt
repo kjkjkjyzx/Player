@@ -41,7 +41,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -146,7 +148,18 @@ fun SearchScreen(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(GlassDefaults.backgroundBrush)
+                    .drawBehind {
+                        drawRect(brush = GlassDefaults.backgroundBrush)
+                        drawRect(
+                            brush = GlassDefaults.highlightBrush,
+                            size  = Size(size.width, GlassDefaults.highlightHeight.toPx())
+                        )
+                        drawRect(
+                            brush   = GlassDefaults.bottomHighlightBrush,
+                            topLeft = Offset(0f, size.height - GlassDefaults.bottomHighlightHeight.toPx()),
+                            size    = Size(size.width, GlassDefaults.bottomHighlightHeight.toPx())
+                        )
+                    }
                     .border(GlassDefaults.borderWidth, GlassDefaults.borderBrush, CircleShape)
                     .clickable(onClick = onBack),
                 contentAlignment = Alignment.Center
@@ -164,7 +177,18 @@ fun SearchScreen(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(50.dp))
-                    .background(GlassDefaults.backgroundBrush)
+                    .drawBehind {
+                        drawRect(brush = GlassDefaults.backgroundBrush)
+                        drawRect(
+                            brush = GlassDefaults.highlightBrush,
+                            size  = Size(size.width, GlassDefaults.highlightHeight.toPx())
+                        )
+                        drawRect(
+                            brush   = GlassDefaults.bottomHighlightBrush,
+                            topLeft = Offset(0f, size.height - GlassDefaults.bottomHighlightHeight.toPx()),
+                            size    = Size(size.width, GlassDefaults.bottomHighlightHeight.toPx())
+                        )
+                    }
                     .border(GlassDefaults.borderWidth, GlassDefaults.borderBrush, RoundedCornerShape(50.dp))
             ) {
                 TextField(

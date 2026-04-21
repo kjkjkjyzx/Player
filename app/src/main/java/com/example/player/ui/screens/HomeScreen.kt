@@ -1144,12 +1144,17 @@ fun VideoCard(
                 )
                 // sharedBounds 已移至缩略图，此处仅保留卡片视觉样式
                 .clip(shape)
-                // 渐变填充 + 顶部高光合并到 drawBehind，消除独立 Canvas 节点
+                // 渐变填充 + 顶部高光 + 底部反射合并到 drawBehind，消除独立 Canvas 节点
                 .drawBehind {
                     drawRect(brush = GlassDefaults.backgroundBrush)
                     drawRect(
                         brush = GlassDefaults.highlightBrush,
                         size  = Size(size.width, GlassDefaults.highlightHeight.toPx())
+                    )
+                    drawRect(
+                        brush   = GlassDefaults.bottomHighlightBrush,
+                        topLeft = Offset(0f, size.height - GlassDefaults.bottomHighlightHeight.toPx()),
+                        size    = Size(size.width, GlassDefaults.bottomHighlightHeight.toPx())
                     )
                 }
                 .border(GlassDefaults.borderWidth, GlassDefaults.borderBrush, shape)
