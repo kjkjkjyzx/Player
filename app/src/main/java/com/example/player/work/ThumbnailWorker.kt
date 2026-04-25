@@ -61,7 +61,11 @@ class ThumbnailWorker(
             if (target.exists() && target.length() > 0L) continue
 
             val ok = runCatching { extractTo(ctx, Uri.parse(uri), target) }.getOrDefault(false)
-            if (ok) processed++
+            if (ok) {
+                processed++
+                // 更新缓存大小计数器，超限时淘汰旧条目
+                ThumbnailCache.evictIfNeeded(ctx, target.length())
+            }
         }
         Result.success()
     }

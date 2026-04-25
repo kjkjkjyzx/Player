@@ -51,6 +51,10 @@ class PlayerViewModel @Inject constructor(
     private val _connectionError = MutableStateFlow(false)
     val connectionError: StateFlow<Boolean> = _connectionError.asStateFlow()
 
+    // 指数退避：初始 1s，最大 16s，连接成功后重置
+    private var currentRetryDelayMs = 1_000L
+    private val maxRetryDelayMs = 16_000L
+
     var player: Player? by mutableStateOf(null)
         private set
 
@@ -95,6 +99,7 @@ class PlayerViewModel @Inject constructor(
 
     private var hideControlsJob: Job? = null
     private var initialized = false
+    private var initJob: Job? = null
     private var positionRestored = false
     private var currentUri: Uri? = null
     private var pendingUri: Uri? = null
@@ -165,6 +170,8 @@ class PlayerViewModel @Inject constructor(
                     player = controller
                     connectionTimeoutJob?.cancel()
                     _connectionError.value = false
+                    // 连接成功，重置退避延迟
+                    currentRetryDelayMs = 1_000L
                     pendingUri?.let { uri ->
                         pendingUri = null
                         attachMediaItem(controller, uri)
@@ -187,11 +194,18 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun retryConnection() {
+        val uri = currentUri ?: return  // Nothing to retry if no video loaded
         controllerFuture?.let { MediaController.releaseFuture(it) }
         controllerFuture = null
         player = null
-        pendingUri = currentUri
-        connectController()
+        pendingUri = uri
+        // 应用退避延迟后再连接
+        val delay = currentRetryDelayMs
+        currentRetryDelayMs = (currentRetryDelayMs * 2).coerceAtMost(maxRetryDelayMs)
+        viewModelScope.launch {
+            delay(delay)
+            connectController()
+        }
     }
 
     fun clearConnectionError() {
@@ -207,7 +221,8 @@ class PlayerViewModel @Inject constructor(
             ?.substringBeforeLast('.')
             ?: "Video"
 
-        viewModelScope.launch(Dispatchers.IO) {
+        initJob?.cancel()
+        initJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 val (effectiveW, effectiveH) = MediaMetadataRetriever().use { retriever ->
                     retriever.setDataSource(getApplication<Application>(), uri)
@@ -323,9 +338,12 @@ class PlayerViewModel @Inject constructor(
         val uri = currentUri
         val pos = player?.currentPosition ?: 0L
         if (uri != null) {
-            runBlocking { positionDao.upsert(PlaybackPositionEntity(uri.toString(), pos)) }
+            viewModelScope.launch {
+                positionDao.upsert(PlaybackPositionEntity(uri.toString(), pos))
+            }
         }
         connectionTimeoutJob?.cancel()
+        player?.removeListener(listener)
         controllerFuture?.let { MediaController.releaseFuture(it) }
         controllerFuture = null
         player = null

@@ -21,6 +21,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import com.example.player.ui.theme.AppSpring
 import com.example.player.ui.theme.GlassDefaults
 import com.example.player.ui.transitions.LocalLandscapeExiting
@@ -36,6 +38,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -74,8 +77,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +100,7 @@ import com.example.player.ui.components.GestureOverlay
 import com.example.player.ui.transitions.LocalAnimatedContentScope
 import com.example.player.ui.transitions.LocalSharedTransitionScope
 import com.example.player.viewmodel.PlayerViewModel
+import com.example.player.util.formatDuration
 import kotlinx.coroutines.delay
 
 private val AccentWhite = Color.White
@@ -580,6 +586,26 @@ private fun PlayerProgressSection(
         else  -> "${viewModel.playbackSpeed}×"
     }
 
+    val sliderInteraction = remember { MutableInteractionSource() }
+    val isDragging by sliderInteraction.collectIsDraggedAsState()
+
+    // Slider 轨道宽度（px → dp），用于定位气泡
+    var sliderWidthPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+
+    val bubbleWidthDp = 72.dp
+
+    val fraction = if (viewModel.duration > 0)
+        (viewModel.currentPosition.toFloat() / viewModel.duration).coerceIn(0f, 1f)
+    else 0f
+
+    // 拇指中心位置换算为 Dp 偏移（Slider 内部 thumb padding ≈ 10dp）
+    val thumbPaddingDp = 10.dp
+    val sliderWidthDp  = with(density) { sliderWidthPx.toDp() }
+    val trackWidthDp   = (sliderWidthDp - thumbPaddingDp * 2).coerceAtLeast(0.dp)
+    val bubbleOffsetDp = (thumbPaddingDp + trackWidthDp * fraction - bubbleWidthDp / 2)
+        .coerceIn(0.dp, (sliderWidthDp - bubbleWidthDp).coerceAtLeast(0.dp))
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -590,24 +616,50 @@ private fun PlayerProgressSection(
             ),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        // 进度条
+        // ── 拖动时间戳气泡（拇指正上方，仅拖动时显示）──────────────────────────
+        if (isDragging) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+            ) {
+                com.example.player.ui.components.LiquidGlassContainer(
+                    modifier     = Modifier
+                        .width(bubbleWidthDp)
+                        .align(Alignment.CenterStart)
+                        .offset(x = bubbleOffsetDp),
+                    cornerRadius = 8.dp
+                ) {
+                    Text(
+                        text       = viewModel.currentPosition.formatDuration(),
+                        color      = Color.White,
+                        fontSize   = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier   = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                    )
+                }
+            }
+        }
+
+        // ── 进度条 ─────────────────────────────────────────────────────────────
         Slider(
-            value = if (viewModel.duration > 0)
-                viewModel.currentPosition.toFloat() / viewModel.duration
-            else 0f,
-            onValueChange = { frac ->
+            value             = fraction,
+            onValueChange     = { frac ->
                 if (viewModel.duration > 0)
                     viewModel.seekTo((frac * viewModel.duration).toLong())
             },
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
+            modifier          = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { sliderWidthPx = it.width },
+            interactionSource = sliderInteraction,
+            colors            = SliderDefaults.colors(
                 thumbColor         = Color.White,
                 activeTrackColor   = Color.White,
                 inactiveTrackColor = Color.White.copy(alpha = 0.28f)
             )
         )
 
-        // 时间文本 + 速度切换胶囊
+        // ── 时间文本 + 速度切换胶囊 ────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -616,7 +668,7 @@ private fun PlayerProgressSection(
             verticalAlignment     = Alignment.CenterVertically
         ) {
             Text(
-                text     = "${formatTime(viewModel.currentPosition)} / ${formatTime(viewModel.duration)}",
+                text     = "${viewModel.currentPosition.formatDuration()} / ${viewModel.duration.formatDuration()}",
                 color    = Color.White.copy(alpha = 0.72f),
                 fontSize = 11.sp
             )

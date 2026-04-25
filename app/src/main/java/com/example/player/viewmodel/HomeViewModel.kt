@@ -16,6 +16,7 @@ import com.example.player.data.db.entity.ImportedVideoEntity
 import com.example.player.domain.usecase.ClearFavoritesUseCase
 import com.example.player.domain.usecase.ClearHistoryUseCase
 import com.example.player.domain.usecase.ClearThumbnailCacheUseCase
+import com.example.player.domain.usecase.GetThumbnailCacheSizeUseCase
 import com.example.player.model.SortOption
 import com.example.player.model.VideoItem
 import com.example.player.repository.VideoRepository
@@ -45,7 +46,8 @@ class HomeViewModel @Inject constructor(
     private val settings:      SettingsDataStore,
     private val clearHistoryUseCase: ClearHistoryUseCase,
     private val clearFavoritesUseCase: ClearFavoritesUseCase,
-    private val clearThumbnailCacheUseCase: ClearThumbnailCacheUseCase
+    private val clearThumbnailCacheUseCase: ClearThumbnailCacheUseCase,
+    private val getThumbnailCacheSizeUseCase: GetThumbnailCacheSizeUseCase
 ) : AndroidViewModel(application) {
 
     // ── 原始响应式数据源 ────────────────────────────────────────────────────
@@ -220,6 +222,8 @@ class HomeViewModel @Inject constructor(
             withContext(Dispatchers.Main) { onResult(ok) }
         }
     }
+
+    fun getThumbnailCacheSize(): Long = getThumbnailCacheSizeUseCase()
 
     // ── 兼容旧接口（UI 层仍在调用） ──────────────────────────────────────────
 

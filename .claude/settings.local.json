@@ -40,7 +40,8 @@
       "Bash(adb devices *)",
       "Bash(./gradlew assembleDebug)",
       "Bash(/c/Users/hghgu/AppData/Local/Android/Sdk/platform-tools/adb.exe devices *)",
-      "Bash(grep -v \"^--$\")"
+      "Bash(grep -v \"^--$\")",
+      "Bash(gradlew.bat :app:compileDebugKotlin)"
     ]
   }
 }

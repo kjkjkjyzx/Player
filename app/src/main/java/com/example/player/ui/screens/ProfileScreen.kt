@@ -1,6 +1,7 @@
 package com.example.player.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
@@ -32,16 +34,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import com.example.player.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.player.ui.components.LiquidGlassContainer
-import com.example.player.ui.components.StarryBackground
+import com.example.player.ui.theme.DarkBackground
 import com.example.player.ui.theme.DarkBorder
 import com.example.player.ui.theme.DarkSurface
 import com.example.player.ui.theme.TextPrimary
@@ -63,10 +67,10 @@ fun ProfileScreen(
         }.getOrNull() ?: "-"
     }
 
-    StarryBackground(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(DarkBackground)
     ) {
         // 顶栏
         Row(
@@ -85,6 +89,44 @@ fun ProfileScreen(
                 fontSize   = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── App 身份头部卡片 ──────────────────────────────────────────────────
+        LiquidGlassContainer(
+            modifier     = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            cornerRadius = 20.dp
+        ) {
+            Column(
+                modifier            = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                AsyncImage(
+                    model              = R.mipmap.ic_launcher_round,
+                    contentDescription = null,
+                    modifier           = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text       = stringResource(R.string.app_name),
+                    color      = TextPrimary,
+                    fontSize   = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text     = stringResource(R.string.profile_version_desc, versionName),
+                    color    = TextSecondary,
+                    fontSize = 13.sp
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -137,7 +179,6 @@ fun ProfileScreen(
             )
         }
     }
-    } // StarryBackground
 
     // 确认弹窗
     dialog?.let { type ->

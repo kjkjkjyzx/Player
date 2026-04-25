@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -44,9 +46,11 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Queue
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -108,6 +112,7 @@ import com.example.player.model.SortOption
 import com.example.player.model.VideoItem
 import com.example.player.ui.components.LiquidGlassContainer
 import com.example.player.ui.components.StarryBackground
+import com.example.player.ui.theme.DarkBackground
 import com.example.player.ui.theme.DarkBorder
 import com.example.player.ui.theme.DarkSurface
 import com.example.player.ui.theme.GradientStart
@@ -237,9 +242,10 @@ fun HomeScreen(
     StarryBackground(modifier = Modifier.fillMaxSize()) {
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
-        snackbarHost   = { },
-        containerColor = Color.Transparent,
-        bottomBar      = {
+        snackbarHost        = { },
+        containerColor      = Color.Transparent,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        bottomBar           = {
             BottomNavBar(
                 navController = navController,
                 onAddClick    = { filePicker.launch(arrayOf("video/*")) }
@@ -385,7 +391,26 @@ fun HomeScreen(
                                         fadeOutSpec   = AppSpring.gentle()
                                     ),
                                     enableDismissFromStartToEnd = false,
-                                    backgroundContent = {}
+                                    backgroundContent = {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(
+                                                    Brush.horizontalGradient(
+                                                        listOf(Color.Transparent, Color(0xFFE53935).copy(alpha = 0.80f))
+                                                    )
+                                                ),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = null,
+                                                tint     = Color.White,
+                                                modifier = Modifier.padding(end = 20.dp).size(22.dp)
+                                            )
+                                        }
+                                    }
                                 ) {
                                     FolderCard(
                                         folder  = folder,
@@ -467,7 +492,26 @@ fun HomeScreen(
                                             fadeOutSpec   = AppSpring.gentle()
                                         ),
                                         enableDismissFromStartToEnd = false,
-                                        backgroundContent = {}
+                                        backgroundContent = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(
+                                                        Brush.horizontalGradient(
+                                                            listOf(Color.Transparent, Color(0xFFE53935).copy(alpha = 0.80f))
+                                                        )
+                                                    ),
+                                                contentAlignment = Alignment.CenterEnd
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.RemoveCircleOutline,
+                                                    contentDescription = null,
+                                                    tint     = Color.White,
+                                                    modifier = Modifier.padding(end = 20.dp).size(22.dp)
+                                                )
+                                            }
+                                        }
                                     ) {
                                         VideoCard(
                                             video            = video,
@@ -545,7 +589,26 @@ fun HomeScreen(
                                             fadeOutSpec   = AppSpring.gentle()
                                         ),
                                         enableDismissFromStartToEnd = false,
-                                        backgroundContent = {}
+                                        backgroundContent = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(
+                                                        Brush.horizontalGradient(
+                                                            listOf(Color.Transparent, Color(0xFFE53935).copy(alpha = 0.80f))
+                                                        )
+                                                    ),
+                                                contentAlignment = Alignment.CenterEnd
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.VisibilityOff,
+                                                    contentDescription = null,
+                                                    tint     = Color.White,
+                                                    modifier = Modifier.padding(end = 20.dp).size(22.dp)
+                                                )
+                                            }
+                                        }
                                     ) {
                                         Box(
                                             modifier = Modifier
@@ -1200,14 +1263,14 @@ fun VideoCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Brush.linearGradient(listOf(Color(0xFF1A2A3C), Color(0xFF0D1826)))),
+                        .background(DarkBackground),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.PlayArrow,
+                        Icons.Default.VideoFile,
                         contentDescription = null,
-                        tint     = Color.White.copy(alpha = 0.3f),
-                        modifier = Modifier.size(28.dp)
+                        tint     = Color.White.copy(alpha = 0.12f),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
                 // AsyncImage 替换 SubcomposeAsyncImage：消除每个 item 的子组合开销
@@ -1315,74 +1378,140 @@ fun BottomNavBar(
         NavDest("profile", Icons.Default.Person,       R.string.nav_profile)
     )
 
-    Row(
+    // 浮动药丸容器：填满宽度 + 系统导航条适配 + 内边距
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(NavBarBg)
-            .border(0.5.dp, DarkBorder, RoundedCornerShape(0.dp))
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .padding(bottom = 8.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment     = Alignment.CenterVertically
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
     ) {
-        items.forEachIndexed { index, dest ->
-            if (index == 2) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color.Transparent)
-                            .border(
-                                width = 1.dp,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 1.00f),
-                                        Color.White.copy(alpha = 0.45f),
-                                        Color.White.copy(alpha = 0.08f),
-                                        Color.White.copy(alpha = 0.60f)
+        LiquidGlassContainer(
+            modifier     = Modifier.fillMaxWidth(),
+            cornerRadius = 28.dp
+        ) {
+            Row(
+                modifier              = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
+                items.forEachIndexed { index, dest ->
+                    // ── 导入（"+"）按钮插在 index=2 之前 ──────────────────────
+                    if (index == 2) {
+                        val addInteraction = remember { MutableInteractionSource() }
+                        val addPressed by addInteraction.collectIsPressedAsState()
+                        val addScale by animateFloatAsState(
+                            targetValue   = if (addPressed) 0.88f else 1.0f,
+                            animationSpec = AppSpring.press(),
+                            label         = "addScale"
+                        )
+                        Column(
+                            modifier            = Modifier.scale(addScale),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Transparent)
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 1.00f),
+                                                Color.White.copy(alpha = 0.45f),
+                                                Color.White.copy(alpha = 0.08f),
+                                                Color.White.copy(alpha = 0.60f)
+                                            ),
+                                            start = Offset(0f, 0f),
+                                            end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .clickable(
+                                        interactionSource = addInteraction,
+                                        indication        = null,
+                                        onClick           = onAddClick
                                     ),
-                                    start = Offset(0f, 0f),
-                                    end   = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                ),
-                                shape = CircleShape
-                            )
-                            .clickable(onClick = onAddClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add), tint = TextPrimary, modifier = Modifier.size(24.dp))
-                    }
-                    Text(stringResource(R.string.nav_import), color = TextSecondary, fontSize = 10.sp)
-                }
-            }
-
-            val active = currentRoute == dest.route
-            val destLabel = stringResource(dest.labelRes)
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        if (currentRoute != dest.route) {
-                            navController.navigate(dest.route) {
-                                popUpTo("home") { saveState = true }
-                                launchSingleTop = true
-                                restoreState    = true
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.cd_add),
+                                    tint     = TextPrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
+                            Text(
+                                stringResource(R.string.nav_import),
+                                color    = TextSecondary,
+                                fontSize = 10.sp
+                            )
                         }
                     }
-                    .padding(horizontal = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    dest.icon,
-                    contentDescription = destLabel,
-                    tint     = if (active) TextPrimary else TextSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
-                Text(destLabel, color = if (active) TextPrimary else TextSecondary, fontSize = 10.sp)
+
+                    // ── 常规导航项 ────────────────────────────────────────────
+                    val active    = currentRoute == dest.route
+                    val destLabel = stringResource(dest.labelRes)
+
+                    val navInteraction = remember { MutableInteractionSource() }
+                    val navPressed by navInteraction.collectIsPressedAsState()
+                    val navScale by animateFloatAsState(
+                        targetValue   = if (navPressed) 0.88f else 1.0f,
+                        animationSpec = AppSpring.press(),
+                        label         = "navScale${dest.route}"
+                    )
+                    val iconTint by animateColorAsState(
+                        targetValue   = if (active) TextPrimary else TextSecondary.copy(alpha = 0.60f),
+                        animationSpec = AppSpring.standard(),
+                        label         = "navTint${dest.route}"
+                    )
+                    val dotAlpha by animateFloatAsState(
+                        targetValue   = if (active) 1f else 0f,
+                        animationSpec = AppSpring.standard(),
+                        label         = "navDot${dest.route}"
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .scale(navScale)
+                            .clickable(
+                                interactionSource = navInteraction,
+                                indication        = null
+                            ) {
+                                if (currentRoute != dest.route) {
+                                    navController.navigate(dest.route) {
+                                        popUpTo("home") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState    = true
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            dest.icon,
+                            contentDescription = destLabel,
+                            tint     = iconTint,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        // 选中指示点（直径 4dp，弹性淡入淡出）
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .background(
+                                    GradientStart.copy(alpha = dotAlpha),
+                                    CircleShape
+                                )
+                        )
+                        Text(destLabel, color = iconTint, fontSize = 10.sp)
+                    }
+                }
             }
         }
     }
